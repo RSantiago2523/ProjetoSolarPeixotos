@@ -26,7 +26,7 @@ FROM ter t
 JOIN problematicas_identificadas p ON p.id_problematica = t.id_problematica
 WHERE t.data_fim IS NULL   -- apenas as que ainda não foram resolvidas
 GROUP BY p.nome_problematica
-ORDER BY total_ocorrencias DESC;
+ORDER BY total_casos_ativos DESC;
 
 
 CREATE OR REPLACE VIEW vw_idosos_isolados AS 
@@ -153,7 +153,7 @@ SELECT
         WHEN risco_social IS TRUE  THEN 'Em risco'
         WHEN risco_social IS FALSE THEN 'Estável'
         ELSE 'Não preenchido'
-    END AS situacao
+    END AS situacao,
     COUNT(*) AS total
 FROM utentes_socio_economicas
 GROUP BY risco_social;
@@ -462,6 +462,6 @@ JOIN ultimo_snapshot uf ON p.id_utente = uf.id_utente
 JOIN UTENTES u ON p.id_utente = u.ID_UTENTE
 WHERE p.id_utente IN (SELECT DISTINCT ID_UTENTE FROM CONTACTO);   -- ← alterado de PARTICIPAR para CONTACTO
 
-#Índices Opcionais
+/*Índices Opcionais*/
 CREATE INDEX idx_hist_idoso_utente_data ON historico_idoso (id_utente, data_historico);
 CREATE INDEX idx_hist_idoso_utente_data_desc ON historico_idoso (id_utente, data_historico DESC);
