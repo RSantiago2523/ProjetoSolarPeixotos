@@ -1,0 +1,425 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novo Idoso | Solar dos Peixotos</title>
+
+    <!-- Bootstrap 5 + Ícones -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fb;
+        }
+        .navbar-brand {
+            font-weight: 600;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #5b8def 0%, #8e44ad 100%);
+            color: white;
+            padding: 60px 0;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            margin-bottom: 2rem;
+        }
+        .hero-section h1 {
+            font-weight: 700;
+        }
+        .card-custom {
+            border: none;
+            border-radius: 14px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            background: white;
+        }
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border-left: 5px solid #0d6efd;
+            padding-left: 1rem;
+        }
+        .required:after {
+            content: " *";
+            color: red;
+        }
+        .btn-sm {
+            margin-right: 4px;
+        }
+        footer {
+            border-top: 1px solid #444;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                Intervenção Social Comunitária
+            </a>
+            <div class="ms-auto d-flex align-items-center">
+                {% if user.is_authenticated %}
+                    <span class="text-white me-3">
+                        <i class="bi bi-person-circle"></i> {{ user.username }}
+                    </span>
+                    <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">Sair</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-6">Novo Idoso</h1>
+            <p class="lead">Registo completo para acompanhamento social</p>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row">
+                <!-- Coluna esquerda -->
+                <div class="col-lg-6">
+                    <!-- Dados pessoais -->
+                    <div class="card card-custom mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="section-title">Informação Pessoal</h5>
+                            <div class="mb-3">
+                                <label class="form-label">Nome</label>
+                                <input type="text" name="nome_utente" class="form-control">
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col">
+                                    <label>Data de Nascimento</label>
+                                    <input type="date" name="data_nascimento" class="form-control">
+                                </div>
+                                <div class="col">
+                                    <label>Sexo</label>
+                                    <select name="genero" class="form-select">
+                                        <option value="">Escolher...</option>
+                                        {% for g in generos %}
+                                            <option value="{{ g.id_genero }}">
+                                                {{ g.descricao_genero }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label>Zona / Freguesia</label>
+                                <select name="zona" class="form-select">
+                                    <option value="">Escolher...</option>
+                                    {% for z in zonas %}
+                                        <option value="{{ z.id_zona_utente }}">
+                                            {{ z.descricao_zona_utente }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label>Estado Civil</label>
+                                <select name="estado_civil" class="form-select">
+                                    <option value="">Escolher...</option>
+                                    {% for ec in estados_civis %}
+                                        <option value="{{ ec.id_estado_civil }}">
+                                            {{ ec.descricao_estado_civil }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label>Vive Sozinho?</label>
+                                <input type="checkbox" name="vive_sozinho" class="form-check-input">
+                            </div>
+                            <div class="mb-3">
+                                <label>Contacto de Emergência</label>
+                                <input type="text" name="contacto_emergencia" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label>Familiar / Cuidador de Referência</label>
+                                <input type="text" name="familiar_referencia" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Saúde e autonomia -->
+                    <div class="card card-custom mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="section-title">Saúde e Autonomia</h5>
+                            <div class="mb-3">
+                                <label>Grau de Autonomia</label>
+                                <select name="grau_autonomia" class="form-select">
+                                    <option value="">Escolher...</option>
+                                    {% for ga in graus_autonomia %}
+                                        <option value="{{ ga.id_grau_autonomia }}">
+                                            {{ ga.nome_grau_autonomia }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label>Mobilidade</label>
+                                <select name="mobilidade" class="form-select">
+                                    <option value="">Escolher...</option>
+                                    {% for m in mobilidades %}
+                                        <option value="{{ m.id_mobilidade }}">
+                                            {{ m.nome_mobilidade }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label>Medicação Diária?</label>
+                                <input type="checkbox" name="medicacao_diaria" class="form-check-input">
+                            </div>
+                            <div class="mb-3">
+                                <label>Dificuldade Acesso a Cuidados de Saúde?</label>
+                                <input type="checkbox" name="dificuldade_acesso_saude" class="form-check-input">
+                            </div>
+                            <div class="mb-3">
+                                <label>Acompanhamento Regular no Centro de Saúde?</label>
+                                <input type="checkbox" name="acompanhamento_reg" class="form-check-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Atividades da Vida Diária (AVD) -->
+                    <div class="card card-custom mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="section-title">Atividades da Vida Diária (AVD)</h5>
+                            <p class="text-muted small">Descreva as principais atividades que o idoso consegue/não consegue realizar (ex.: alimentação, higiene, vestuário, gestão da medicação)</p>
+                            <textarea name="descricao_avd" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna direita -->
+                <div class="col-lg-6">
+                    <!-- Bem-estar social -->
+                    <div class="card card-custom mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="section-title">Bem‑estar e Social</h5>
+                            <div class="mb-3">
+                                <label>Nível de Isolamento</label>
+                                <select name="nivel_isolamento" class="form-select">
+                                    <option value="">Escolher...</option>
+                                    {% for ni in niveis_isolamento %}
+                                        <option value="{{ ni.id_nivel_isolamento }}">
+                                            {{ ni.nivel_isolamento }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label>Relação com a Família</label>
+                                <select name="relacao_familia" class="form-select">
+                                    <option value="">Escolher...</option>
+                                    {% for rf in relacoes_familia %}
+                                        <option value="{{ rf.id_relacao_familia }}">
+                                            {{ rf.descricao_relacao_familia }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label>Frequência de Contacto Social</label>
+                                <select name="frequencia_contacto_social" class="form-select">
+                                    <option value="">Escolher...</option>
+                                    {% for fc in frequencias_contacto_social %}
+                                        <option value="{{ fc.id_frequencia_contacto_social }}">
+                                            {{ fc.descricao_frequencia_contacto_social }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label>Participa em Atividades da Freguesia?</label>
+                                <input type="checkbox" name="participa_atividades_fr" class="form-check-input">
+                            </div>
+                            <div class="mb-3">
+                                <label>Sinais de Tristeza/Depressão?</label>
+                                <input type="checkbox" name="tristesa_depressao" class="form-check-input">
+                            </div>
+                            <div class="mb-3">
+                                <label>Luto Recente?</label>
+                                <input type="checkbox" name="luto_recente" class="form-check-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Habitação -->
+                    <div class="card card-custom mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="section-title">Habitação e Segurança</h5>
+                            <div class="mb-3">
+                                <label>Tipo de Habitação</label>
+                                <select name="tipo_habitacao" class="form-select">
+                                    <option value="">Escolher...</option>
+                                    {% for th in tipos_habitacao %}
+                                        <option value="{{ th.id_tipo_habitacao }}">
+                                            {{ th.descricao_tipo }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label>Aquecimento Adequado no Inverno?</label>
+                                <input type="checkbox" name="aquecimento_adeq_inv" class="form-check-input">
+                            </div>
+                            <div class="mb-3">
+                                <label>Segurança (risco de quedas, iluminação, etc.)</label>
+                                <textarea name="seguranca" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label>Necessidade de Adaptações</label>
+                                <textarea name="necessidade_adptacoes" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Doenças Crónicas (múltipla escolha + nova) -->
+                    <div class="card card-custom mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="section-title">Doenças Crónicas</h5>
+                            {% for d in doencas_cronicas %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="doencas" value="{{ d.id_doenca_cronica }}">
+                                    <label class="form-check-label">{{ d.descricao_doenca_cronica }}</label>
+                                </div>
+                            {% empty %}
+                                <p class="text-muted">Não existem doenças registadas.</p>
+                            {% endfor %}
+                            <hr>
+                            <div class="mb-3">
+                                <label class="form-label">Nova doença crónica (opcional)</label>
+                                <input type="text" name="nova_doenca" class="form-control"
+                                       placeholder="Ex.: Hipertensão">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Barreiras Arquitetónicas (múltipla escolha + nova) -->
+                    <div class="card card-custom mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="section-title">Barreiras Arquitetónicas</h5>
+                            {% for b in barreiras_arquitetonicas %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="barreiras" value="{{ b.id_barreira_arquitetonica }}">
+                                    <label class="form-check-label">{{ b.descricao_barreira_arquitetonica }}</label>
+                                </div>
+                            {% empty %}
+                                <p class="text-muted">Não existem barreiras registadas.</p>
+                            {% endfor %}
+                            <hr>
+                            <div class="mb-3">
+                                <label class="form-label">Nova barreira arquitetónica (opcional)</label>
+                                <input type="text" name="nova_barreira" class="form-control"
+                                       placeholder="Ex.: Escadas sem corrimão">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sinais de Fragilidade (múltipla escolha + nova) -->
+                    <div class="card card-custom mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="section-title">Sinais de Fragilidade</h5>
+                            {% for f in sinais_fragilidade %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="fragilidades" value="{{ f.id_sinal_fragilidade }}">
+                                    <label class="form-check-label">{{ f.descricao_fragilidade }}</label>
+                                </div>
+                            {% empty %}
+                                <p class="text-muted">Não existem sinais de fragilidade registados.</p>
+                            {% endfor %}
+                            <hr>
+                            <div class="mb-3">
+                                <label class="form-label">Novo sinal de fragilidade (opcional)</label>
+                                <input type="text" name="nova_fragilidade" class="form-control"
+                                       placeholder="Ex.: Perda de peso">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quedas -->
+                    <div class="card card-custom mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="section-title">Registo de Quedas</h5>
+                            <table class="table table-bordered" id="tabela_quedas">
+                                <thead>
+                                    <tr><th>Data</th><th>Observações</th><th width="50"></th></tr>
+                                </thead>
+                                <tbody>
+                                    {% for q in quedas %}
+                                        <tr>
+                                            <td><input type="date" name="data_queda" class="form-control" value="{{ q.data }}"></td>
+                                            <td><input type="text" name="obs_queda" class="form-control" value="{{ q.obs }}"></td>
+                                            <td><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td><input type="date" name="data_queda" class="form-control"></td>
+                                            <td><input type="text" name="obs_queda" class="form-control"></td>
+                                            <td><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="addQueda()">
+                                <i class="bi bi-plus-circle"></i> Adicionar queda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end mb-5">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Criar Idoso</button>
+                <a href="{% url 'idosos_lista' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            © 2026 Solar dos Peixotos · Sistema de Intervenção Social
+        </div>
+    </footer>
+
+    <script>
+        function addQueda() {
+            let linha = `
+                <tr>
+                    <td><input type="date" name="data_queda" class="form-control"></td>
+                    <td><input type="text" name="obs_queda" class="form-control"></td>
+                    <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
+                </tr>`;
+            document.querySelector("#tabela_quedas tbody").insertAdjacentHTML("beforeend", linha);
+        }
+
+        document.addEventListener("click", function(e) {
+            if (e.target.closest(".remover")) {
+                e.target.closest("tr").remove();
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

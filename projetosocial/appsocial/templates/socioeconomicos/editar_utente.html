@@ -1,0 +1,418 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Utente Socioeconómico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <style>
+        .card-header i { margin-right: 6px; }
+        .required:after { content: " *"; color: red; }
+        .resolucao-container {
+            margin-left: 1.8rem;
+            margin-bottom: 0.8rem;
+        }
+        .select2-container {
+            width: 100% !important;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5 mb-5">
+    <h2 class="mb-4"><i class="bi bi-pencil-square"></i> Editar Utente Socioeconómico</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Coluna esquerda (igual) -->
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-person"></i> Informação Pessoal
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nome</label>
+                            <input type="text" name="nome_utente" class="form-control" required
+                                   value="{{ submetido.nome_utente|default:'' }}">
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label>Data de Nascimento</label>
+                                <input type="date" name="data_nascimento" class="form-control"
+                                       value="{{ submetido.data_nascimento|default:'' }}">
+                            </div>
+                            <div class="col">
+                                <label>Sexo</label>
+                                <select name="genero" class="form-select">
+                                    <option value="">Escolher...</option>
+                                    {% for g in generos %}
+                                        <option value="{{ g.id_genero }}"
+                                            {% if submetido.genero|stringformat:"s" == g.id_genero|stringformat:"s" %}selected{% endif %}>
+                                            {{ g.descricao_genero }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label>Nacionalidade</label>
+                            <select name="nacionalidade" class="form-select">
+                                <option value="">Escolher...</option>
+                                {% for n in nacionalidades %}
+                                    <option value="{{ n.id_nacionalidade }}"
+                                        {% if submetido.nacionalidade|stringformat:"s" == n.id_nacionalidade|stringformat:"s" %}selected{% endif %}>
+                                        {{ n.descricao_nacionalidade }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Freguesia / Zona</label>
+                            <select name="zona" class="form-select">
+                                <option value="">Escolher...</option>
+                                {% for z in zonas %}
+                                    <option value="{{ z.id_zona_utente }}"
+                                        {% if submetido.zona|stringformat:"s" == z.id_zona_utente|stringformat:"s" %}selected{% endif %}>
+                                        {{ z.descricao_zona_utente }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Tipologia do Agregado</label>
+                            <select name="tipologia" class="form-select">
+                                <option value="">Escolher...</option>
+                                {% for t in tipologias %}
+                                    <option value="{{ t.id_tipologia }}"
+                                        {% if submetido.tipologia|stringformat:"s" == t.id_tipologia|stringformat:"s" %}selected{% endif %}>
+                                        {{ t.descricao_tipologia }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Membros do agregado (igual) -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-success text-white">
+                        <i class="bi bi-people"></i> Membros do Agregado Familiar
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered" id="tabela_membros">
+                            <thead class="table-light">
+                                <tr><th>Nome</th><th>Ano de Nascimento</th><th>Parentesco</th><th width="50"></th></tr>
+                            </thead>
+                            <tbody>
+                                {% for m in membros_submetidos %}
+                                <tr>
+                                    <td><input type="text" name="nome_membro" class="form-control" value="{{ m.nome }}"></td>
+                                    <td><input type="number" name="ano_nascimento" class="form-control" placeholder="AAAA" value="{{ m.ano }}"></td>
+                                    <td><input type="text" name="grau_parentesco" class="form-control" value="{{ m.parentesco }}"></td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td><input type="text" name="nome_membro" class="form-control"></td>
+                                    <td><input type="number" name="ano_nascimento" class="form-control" placeholder="AAAA"></td>
+                                    <td><input type="text" name="grau_parentesco" class="form-control"></td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="addMembro()">
+                            <i class="bi bi-plus-circle"></i> Adicionar membro
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna direita (igual) -->
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-warning">
+                        <i class="bi bi-cash"></i> Situação Económica
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label>Situação Habitacional</label>
+                            <select name="situacao_habitacional" class="form-select">
+                                <option value="">Escolher...</option>
+                                {% for sh in situacoes_habitacionais %}
+                                    <option value="{{ sh.id_situacao_habitacional }}"
+                                        {% if submetido.situacao_habitacional|stringformat:"s" == sh.id_situacao_habitacional|stringformat:"s" %}selected{% endif %}>
+                                        {{ sh.descricao_situacao_habitacional }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Situação Laboral</label>
+                            <select name="situacao_laboral" class="form-select">
+                                <option value="">Escolher...</option>
+                                {% for sl in situacoes_laborais %}
+                                    <option value="{{ sl.id_situacao_laboral }}"
+                                        {% if submetido.situacao_laboral|stringformat:"s" == sl.id_situacao_laboral|stringformat:"s" %}selected{% endif %}>
+                                        {{ sl.descricao_situacao_laboral }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Tipo de Rendimento</label>
+                            <select name="tipo_rendimento" class="form-select">
+                                <option value="">Escolher...</option>
+                                {% for tr in tipos_rendimento %}
+                                    <option value="{{ tr.id_tipo_rendimento }}"
+                                        {% if submetido.tipo_rendimento|stringformat:"s" == tr.id_tipo_rendimento|stringformat:"s" %}selected{% endif %}>
+                                        {{ tr.nome_tipo_rendimento }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <hr>
+                        <!-- Escalões de Rendimento (igual) -->
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-secondary text-white">
+                                <i class="bi bi-bar-chart-steps"></i> Escalões de Rendimento
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-bordered" id="tabela_escaloes">
+                                    <thead class="table-light"><tr><th>Tipo de Escalão</th><th>Valor Exato (€)</th><th width="50"></th></tr></thead>
+                                    <tbody>
+                                        {% for e in escaloes_submetidos %}
+                                        <tr>
+                                            <td><input type="text" name="tipo_escalao" class="form-control" value="{{ e.tipo }}"></td>
+                                            <td><input type="number" step="0.01" name="valor_exato" class="form-control" value="{{ e.valor }}"></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td><input type="text" name="tipo_escalao" class="form-control" placeholder="Ex: 1º Escalão, IRS, ..."></td>
+                                            <td><input type="number" step="0.01" name="valor_exato" class="form-control"></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="addEscalao()">
+                                    <i class="bi bi-plus-circle"></i> Adicionar escalão
+                                </button>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Despesas Fixas (igual) -->
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-info text-white">
+                                <i class="bi bi-receipt"></i> Despesas Fixas
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-bordered" id="tabela_despesas">
+                                    <thead class="table-light"><tr><th>Tipo de despesa</th><th>Valor (€)</th><th width="50"></th></tr></thead>
+                                    <tbody>
+                                        {% for d in despesas_submetidas %}
+                                        <tr>
+                                            <td>
+                                                <select name="tipo_despesa" class="form-select">
+                                                    <option value="">Escolher...</option>
+                                                    {% for td in tipos_despesa %}
+                                                        <option value="{{ td.id_tipo_despesa }}" {% if d.tipo|stringformat:"s" == td.id_tipo_despesa|stringformat:"s" %}selected{% endif %}>{{ td.descricao_tipo_despesa }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td><input type="number" step="0.01" name="valor_despesa" class="form-control" value="{{ d.valor }}"></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td>
+                                                <select name="tipo_despesa" class="form-select">
+                                                    <option value="">Escolher...</option>
+                                                    {% for td in tipos_despesa %}
+                                                        <option value="{{ td.id_tipo_despesa }}">{{ td.descricao_tipo_despesa }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td><input type="number" step="0.01" name="valor_despesa" class="form-control"></td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                <button type="button" class="btn btn-outline-info btn-sm" onclick="addDespesa()">
+                                    <i class="bi bi-plus-circle"></i> Adicionar despesa
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Risco Social</label>
+                            <select name="risco_social" class="form-select">
+                                <option value="Em risco" {% if submetido.risco_social == 'Em risco' %}selected{% endif %}>Em risco</option>
+                                <option value="Situação estável" {% if submetido.risco_social == 'Situação estável' %}selected{% endif %}>Situação estável</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Critério de Risco</label>
+                            <textarea name="criterio_risco" class="form-control" rows="2">{{ submetido.criterio_risco|default:'' }}</textarea>
+                            <small class="text-muted">Preencha se aplicável, especialmente quando o risco social está assinalado.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Observações</label>
+                            <textarea name="observacoes_utente" class="form-control">{{ submetido.observacoes_utente|default:'' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problemáticas com dropdown de intervenção por problemática -->
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <i class="bi bi-clipboard2-pulse"></i> Problemáticas
+            </div>
+            <div class="card-body">
+                {% for p in todas_problematicas %}
+                    <div class="form-check mb-2">
+                        <input class="form-check-input problematica-checkbox" type="checkbox" name="problematicas" value="{{ p.id_problematica }}"
+                               id="prob_{{ p.id_problematica }}"
+                               {% if p.id_problematica|stringformat:"s" in submetido.problematicas %}checked{% endif %}>
+                        <label class="form-check-label" for="prob_{{ p.id_problematica }}">
+                            {{ p.nome_problematica }}
+                        </label>
+                    </div>
+                    <!-- No corpo do template, dentro do loop das problemáticas -->
+                    <div class="resolucao-container" id="resolucao_{{ p.id_problematica }}" style="display: none;">
+                        <label class="form-label small text-muted">Associar resolução a intervenção (opcional):</label>
+                        <select name="resolucao_intervencao_{{ p.id_problematica }}" class="form-select form-select-sm select2-intervencao" style="width: 100%;">
+                            <option value="">-- Sem intervenção --</option>
+                            {% for interv in intervencoes_utente %}
+                                <option value="{{ interv.id_intervencao }}">
+                                    #{{ interv.id_intervencao }} - {{ interv.data_intervencao|date:"d/m/Y H:i" }} - {{ interv.id_tipo_intervencao.nome_tipo_intervencao }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endfor %}
+                <hr>
+                <div class="mb-3">
+                    <label class="form-label">Nova problemática (opcional)</label>
+                    <input type="text" name="nova_problematica" class="form-control" 
+                        placeholder="Ex: Dificuldade de acesso a transportes" 
+                        value="{{ submetido.nova_problematica|default:'' }}">
+                    <small class="text-muted">Se a problemática não estiver na lista, pode adicioná-la aqui.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-end">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i> Guardar Alterações
+            </button>
+            <a href="{% url 'socioeconomicos_detalhe' id_utente %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+
+<script>
+    function addMembro() {
+        let linha = `
+            <tr>
+                <td><input type="text" name="nome_membro" class="form-control"></td>
+                <td><input type="number" name="ano_nascimento" class="form-control" placeholder="AAAA"></td>
+                <td><input type="text" name="grau_parentesco" class="form-control"></td>
+                <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
+            </tr>`;
+        document.querySelector("#tabela_membros tbody").insertAdjacentHTML("beforeend", linha);
+    }
+
+    function addDespesa() {
+        let options = `{% for d in tipos_despesa %}<option value="{{ d.id_tipo_despesa }}">{{ d.descricao_tipo_despesa }}</option>{% endfor %}`;
+        let linha = `
+            <tr>
+                <td>
+                    <select name="tipo_despesa" class="form-select">
+                        <option value="">Escolher...</option>
+                        ${options}
+                    </select>
+                </td>
+                <td><input type="number" step="0.01" name="valor_despesa" class="form-control"></td>
+                <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
+            </tr>`;
+        document.querySelector("#tabela_despesas tbody").insertAdjacentHTML("beforeend", linha);
+    }
+
+    function addEscalao() {
+        let linha = `
+            <tr>
+                <td><input type="text" name="tipo_escalao" class="form-control" placeholder="Ex: 1º Escalão, IRS, ..."></td>
+                <td><input type="number" step="0.01" name="valor_exato" class="form-control"></td>
+                <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
+            </tr>`;
+        document.querySelector("#tabela_escaloes tbody").insertAdjacentHTML("beforeend", linha);
+    }
+
+    // Guardar estado inicial das checkboxes de problemáticas
+    const initialCheckboxState = {};
+    document.querySelectorAll('.problematica-checkbox').forEach(checkbox => {
+        initialCheckboxState[checkbox.value] = checkbox.checked;
+    });
+
+    // Função para atualizar visibilidade do dropdown
+    function updateDropdownVisibility(checkbox) {
+        const container = document.getElementById(`resolucao_${checkbox.value}`);
+        if (!container) return;
+        
+        // Mostrar dropdown apenas se a checkbox foi desmarcada E estava marcada inicialmente
+        const shouldShow = (!checkbox.checked) && initialCheckboxState[checkbox.value] === true;
+        container.style.display = shouldShow ? 'block' : 'none';
+    }
+
+    // Adicionar listeners e inicializar
+    document.querySelectorAll('.problematica-checkbox').forEach(checkbox => {
+        // Executar uma vez para estado inicial (todos escondidos, exceto os que já estavam desmarcados? Não, inicialmente nenhum dropdown deve aparecer)
+        updateDropdownVisibility(checkbox);
+        checkbox.addEventListener('change', () => updateDropdownVisibility(checkbox));
+    });
+
+    // Remover linhas dinâmicas (membros, despesas, escalões)
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remover')) {
+            e.target.closest('tr').remove();
+        }
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2-intervencao').select2({ width: '100%', placeholder: 'Pesquisar intervenção...', allowClear: true });
+    });
+</script>
+</body>
+</html>

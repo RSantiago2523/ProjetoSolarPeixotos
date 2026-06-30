@@ -1,0 +1,182 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Encaminhamento | Solar dos Peixotos</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <style>
+        body { background: #f5f7fb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar-brand { font-weight: 600; }
+        .hero-section {
+            background: linear-gradient(135deg, #5b8def 0%, #8e44ad 100%);
+            color: white;
+            padding: 60px 0;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            margin-bottom: 2rem;
+        }
+        .hero-section h1 { font-weight: 700; }
+        .card-custom {
+            border: none;
+            border-radius: 14px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            background: white;
+        }
+        .required:after { content: " *"; color: red; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">Intervenção Social Comunitária</a>
+            <div class="ms-auto d-flex align-items-center">
+                {% if user.is_authenticated %}
+                    <span class="text-white me-3"><i class="bi bi-person-circle"></i> {{ user.username }}</span>
+                    <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">Sair</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-6">Editar Encaminhamento</h1>
+            <p class="lead">#{{ encaminhamento.id_encaminhamento }}</p>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <!-- Card: Selecionar Intervenção (Select2 com AJAX e pré‑seleção) -->
+            <div class="card card-custom mb-4">
+                <div class="card-body p-4">
+                    <h5 class="mb-3 required">Selecionar Intervenção</h5>
+                    <select name="intervencao" id="id_intervencao" class="form-control select2-intervencao" style="width: 100%;">
+                        {% if intervencao_atual_id %}
+                            <option value="{{ intervencao_atual_id }}" selected>{{ intervencao_atual_text }}</option>
+                        {% else %}
+                            <option value="">Pesquise a intervenção...</option>
+                        {% endif %}
+                    </select>
+                    <small class="text-muted">Pesquise por ID, data, tipo, entidade, programa ou responsável (mínimo 2 caracteres).</small>
+                </div>
+            </div>
+
+            <!-- Dados do encaminhamento -->
+            <div class="card card-custom mb-4">
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required">Entidade</label>
+                            <select name="entidade" class="form-select">
+                                <option value="">Escolher...</option>
+                                {% for e in entidades %}
+                                    <option value="{{ e.id_entidade }}"
+                                        {% if submetido.entidade|default:encaminhamento.id_entidade_id == e.id_entidade %}selected{% endif %}>
+                                        {{ e.nome_entidade }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Tipo de Resposta</label>
+                            <select name="tipo_resposta" class="form-select">
+                                <option value="">Escolher...</option>
+                                {% for tr in tipos_resposta %}
+                                    <option value="{{ tr.id_tipo_resposta }}"
+                                        {% if submetido.tipo_resposta|default:encaminhamento.id_tipo_resposta_id == tr.id_tipo_resposta %}selected{% endif %}>
+                                        {{ tr.descricao_tipo_resposta }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label required">Descrição do Encaminhamento</label>
+                            <textarea name="descricao" class="form-control" rows="2">{{ submetido.descricao|default:encaminhamento.descricao_encaminhamento }}</textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="encaminhamento_feito" class="form-check-input" id="feito"
+                                       {% if submetido.encaminhamento_feito|default:encaminhamento.encaminhamento_feito %}checked{% endif %}>
+                                <label class="form-check-label" for="feito">Encaminhamento realizado?</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Data da Resposta</label>
+                            <input type="datetime-local" name="data_resposta" class="form-control"
+                                   value="{{ submetido.data_resposta|default:encaminhamento.data_resposta|date:'Y-m-d\\TH:i' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Tempo de Resposta (dias)</label>
+                            <input type="number" name="tempo_resposta" class="form-control" step="1"
+                                   value="{{ submetido.tempo_resposta|default:encaminhamento.tempo_resposta }}">
+                        </div>
+                        <div class="mb-3">
+                            <label>Observações</label>
+                            <textarea name="observacoes" class="form-control" rows="3">{{ submetido.observacoes|default:encaminhamento.observacoes_encaminhamento }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-end mb-5">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar Alterações</button>
+                <a href="{% url 'encaminhamentos_detalhe' encaminhamento.id_encaminhamento %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">© 2026 Solar dos Peixotos · Sistema de Intervenção Social</div>
+    </footer>
+
+    <!-- jQuery, Bootstrap JS e Select2 -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#id_intervencao').select2({
+                ajax: {
+                    url: '{% url "intervencoes_autocomplete" %}',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function(params) {
+                        return { q: params.term };
+                    },
+                    processResults: function(data) {
+                        return { results: data.results };
+                    },
+                    cache: true
+                },
+                placeholder: 'Pesquise por ID, data, tipo, entidade...',
+                minimumInputLength: 2,
+                allowClear: true,
+                width: '100%'
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+# Manual de Utilizador – Plataforma de Intervenção Social Comunitária
+
+Este manual destina‑se aos administradores e técnicos da Junta de Freguesia de Viseu que irão utilizar a plataforma para gerir o acompanhamento social de utentes. Descreve as funcionalidades principais e fornece instruções práticas para a execução das tarefas mais comuns.
+
+---
+
+## 1. Acesso à plataforma
+
+A plataforma está disponível num navegador web (Chrome, Firefox, Edge, etc.). Para aceder:
+
+1. Abra o navegador e introduza o endereço fornecido.
+2. Na página de login, introduza o seu "email" e a "palavra‑passe" atribuídos.
+3. Clique em "Entrar".
+
+Após a autenticação, será redirecionado para o "Dashboard", que é a página inicial da plataforma. Se as credenciais estiverem incorretas, surgirá uma mensagem de erro.
+
+"Nota": Apenas utilizadores registados na base de dados (tabela "ADMINISTRADORES") têm acesso. Caso não consiga entrar, contacte o administrador do sistema.
+
+---
+
+## 2. Dashboard – Visão geral dos indicadores
+
+O Dashboard é uma das página principais da plataforma. Apresenta um conjunto de indicadores que permitem uma monitorização rápida da atividade.
+
+"Na página inicial encontra":
+
+- "Cards de totais" – número de idosos, utentes socioeconómicos, intervenções e contactos registados.
+- "Gráficos de evolução mensal" – intervenções e contactos por mês.
+- "Evolução de problemáticas" – novos casos e casos ativos por mês.
+- "Problemáticas mais frequentes" – lista das problemáticas mais comuns entre os utentes socioeconómicos.
+- "Tipos de intervenção e programas mais utilizados".
+- "Risco social" – distribuição de utentes em risco vs. estáveis.
+- "Idosos em isolamento elevado e que vivem sozinhos" – tabela com os casos mais críticos.
+- "Respostas mais utilizadas nos encaminhamentos".
+- "Agravamento do grau de dependência" – idosos cuja autonomia piorou.
+- "Top 10 idosos com mais contactos".
+- "Melhorias após participação" – comparação do estado inicial vs. atual.
+- "Visitas prioritárias" – situações que requerem atenção imediata (isolamento, quedas repetidas, falta de rede de suporte).
+
+Os gráficos são interativos e a informação é atualizada automaticamente sempre que os dados são alterados. Para gerar relatórios PDF mensais ou anuais, utilize o formulário no topo da página (ver secção 8).
+
+---
+
+## 3. Gestão de Utentes Socioeconómicos
+
+Esta secção permite gerir todos os utentes com dificuldades socioeconómicas.
+
+### 3.1. Listar utentes
+
+No menu, clique em "Utentes Socioeconómicos > Listar". Será apresentada uma tabela com todos os utentes, paginada (10 registos por página). Pode:
+
+- "Pesquisar por nome" – utilize a caixa de pesquisa no topo (campo “Filtrar por nome”) e clique em **Filtrar**. Para limpar a pesquisa, clique em **Limpar**.
+- "Ordenar" – a lista está ordenada por código.
+- "Navegar" – utilize os botões para avançar/recuar nas páginas.
+
+### 3.2. Ver detalhe de um utente
+
+Na linha do utente, clique em "Ver" (ícone de olho). Será apresentada uma página com todas as informações do utente: dados pessoais, situação social, económica, intervenções em que participou, problemáticas (com datas de início/fim e estado), membros do agregado, despesas e escalões de rendimento.
+
+### 3.3. Criar um novo utente
+
+1. Na lista de utentes, clique em **Novo Utente** (botão azul no topo).
+2. Preencha o formulário:
+   - **Informação Pessoal**: nome (obrigatório), data de nascimento, sexo, nacionalidade, zona, tipologia do agregado.
+   - **Membros do Agregado**: adicione membros clicando em **Adicionar membro**. Para remover, clique no X.
+   - **Situação Económica**: situação habitacional, laboral, tipo de rendimento. Pode adicionar escalões de rendimento e despesas fixas (com o botão **Adicionar escalão/despesa**).
+   - **Risco Social**: selecione “Em risco” ou “Estável”.
+   - **Critério de Risco**: descreva o motivo (opcional).
+   - **Observações**: campo livre.
+   - **Problemáticas**: selecione uma ou mais problemáticas. Se não encontrar a que procura, pode adicionar uma nova no campo “Nova problemática” (será criada e associada automaticamente).
+3. Clique em **Criar Utente**. Se todos os campos obrigatórios estiverem preenchidos, o utente será criado e guardado no histórico. Caso contrário, serão mostrados erros específicos.
+
+### 3.4. Editar um utente
+
+Na lista ou no detalhe, clique em **Editar** (ícone de lápis). O formulário será pré‑preenchido com os dados atuais. Pode modificar qualquer campo.
+
+**Atenção às problemáticas:**
+- Para **resolver** uma problemática, desmarque a checkbox correspondente. Surgirá um *dropdown* onde pode associar a resolução a uma intervenção (opcional). A problemática será registada como resolvida na data atual.
+- Para **adicionar** uma nova problemática, marque a checkbox (ou adicione uma nova através do campo de texto).
+- As problemáticas que permanecem marcadas mantêm‑se ativas.
+
+Após as alterações, clique em **Guardar Alterações**.
+
+### 3.5. Eliminar um utente
+
+O utente será removido permanentemente, juntamente com todos os seus registos (problemáticas, membros, despesas, escalões, histórico).
+
+---
+
+## 4. Gestão de Utentes Idosos
+
+O processo é semelhante ao dos utentes socioeconómicos, mas com campos específicos para a realidade do envelhecimento.
+
+### 4.1. Listar idosos
+
+No menu, clique em **Utentes Idosos > Listar**. A tabela mostra: código, nome, idade, sexo, estado civil, “vive sozinho”, zona. Pode pesquisar por nome (case‑insensitive).
+
+### 4.2. Ver detalhe de um idoso
+
+Clique em **Ver**. A página de detalhe inclui:
+
+- Informação pessoal e de contacto.
+- Saúde e autonomia (grau de autonomia, mobilidade, medicação, acesso a cuidados de saúde).
+- Bem‑estar e social (isolamento, relação familiar, participação em atividades).
+- Habitação e segurança.
+- Atividades da vida diária (AVD).
+- Doenças crónicas, barreiras arquitetónicas e sinais de fragilidade.
+- Histórico de contactos (tabela com data, tipo, frequência, observações).
+- Registo de quedas (data e observações).
+
+### 4.3. Criar um novo idoso
+
+1. Clique em **Novo Idoso**.
+2. Preencha o formulário, que está dividido em secções:
+   - **Informação Pessoal**: nome, data de nascimento, sexo, zona, estado civil, “vive sozinho”, contacto de emergência, familiar/cuidador.
+   - **Saúde e Autonomia**: grau de autonomia, mobilidade, medicação diária, dificuldade de acesso à saúde, acompanhamento no centro de saúde.
+   - **Bem‑estar e Social**: nível de isolamento, relação com a família, frequência de contacto social, participação em atividades, sinais de tristeza/depressão, luto recente.
+   - **Habitação**: tipo de habitação, aquecimento, segurança, necessidade de adaptações.
+   - **Atividades da Vida Diária (AVD)**: campo de texto livre.
+   - **Doenças, barreiras e fragilidades**: selecione as opções nas checkboxes. Pode adicionar novas através dos campos de texto correspondentes.
+   - **Quedas**: adicione linhas com data e observações (clique em **Adicionar queda**).
+3. Clique em **Criar Idoso**. Após a criação, é guardado um snapshot histórico.
+
+### 4.4. Editar um idoso
+
+Semelhante à edição de socioeconómicos. O formulário é pré‑preenchido e permite alterar qualquer campo. As listas de doenças, barreiras e fragilidades são recriadas a partir das seleções submetidas – quaisquer que tenham sido removidas são eliminadas. O mesmo acontece com as quedas.
+
+### 4.5. Eliminar um idoso
+
+**A eliminação só é permitida se não existirem contactos associados.** Se o idoso tiver contactos registados, a operação é bloqueada. Para eliminar, confirme a ação. Serão removidos todos os registos do idoso (incluindo histórico, quedas, AVD, doenças, barreiras, fragilidades, e naturalmente o registo em `UTENTES_IDOSOS` e `UTENTES`).
+
+---
+
+## 5. Gestão de Intervenções
+
+As intervenções são as ações realizadas com os utentes socioeconómicos.
+
+### 5.1. Listar intervenções
+
+No menu, clique em **Intervenções**. A tabela mostra: ID, data, tipo, entidade, programa, responsável, número de utentes participantes, e ações (ver, editar, eliminar). A lista é paginada e ordenada por data decrescente (mais recentes primeiro).
+
+### 5.2. Ver detalhe de uma intervenção
+
+Clique em **Ver**. A página mostra os dados da intervenção (incluindo o administrador) e a lista de utentes participantes (com os seus dados). Se existirem encaminhamentos associados, também são listados, com ligação para o detalhe de cada um.
+
+### 5.3. Criar uma nova intervenção
+
+1. Clique em **Nova Intervenção**.
+2. No formulário:
+   - **Tipo de Intervenção, Entidade, Programa**: selecione as opções dos *dropdowns*. Se não encontrar a opção pretendida, preencha o campo de texto livre (ex: “Ou adicione um novo tipo…”). O novo valor será criado automaticamente e utilizado.
+   - **Data da Intervenção**: selecione a data e hora.
+   - **Observações**: campo livre.
+   - **Selecionar Utentes**: utilize o campo de pesquisa (Select2) para encontrar e selecionar os utentes. Pode selecionar vários (use Ctrl+clique ou a funcionalidade do Select2).
+3. Clique em **Criar Intervenção**. A intervenção será registada e os utentes associados.
+
+### 5.4. Editar uma intervenção
+
+Semelhante à criação. O formulário é pré‑preenchido e permite alterar os dados. Os utentes participantes são atualizados (apaga‑se a lista anterior e recria‑se com a nova seleção). Novos tipos/entidades/programas podem ser adicionados da mesma forma.
+
+### 5.5. Eliminar uma intervenção
+
+**A eliminação só é permitida se não existirem encaminhamentos associados.** Se houver, a operação é bloqueada e é mostrada uma mensagem de erro. Para eliminar, confirme a ação. A intervenção e todas as associações com utentes serão removidas.
+
+---
+
+## 6. Gestão de Encaminhamentos
+
+Os encaminhamentos registam as respostas da rede social a uma intervenção.
+
+### 6.1. Listar encaminhamentos
+
+No menu, clique em **Encaminhamentos**. A tabela mostra: ID, data de resposta, entidade, tipo de resposta, “encaminhamento feito?”, tempo de resposta, intervenção associada, e ações (ver, editar, eliminar). A lista é paginada.
+
+### 6.2. Ver detalhe de um encaminhamento
+
+Clique em **Ver**. A página mostra os dados do encaminhamento e, no segundo cartão, os dados da intervenção associada e a lista de utentes participantes.
+
+### 6.3. Criar um novo encaminhamento
+
+1. Clique em **Novo Encaminhamento**.
+2. **Selecionar Intervenção**: utilize o campo de pesquisa (Select2 com AJAX) – comece a digitar parte do ID, data, tipo, entidade, etc., para encontrar a intervenção correta.
+3. Preencha os restantes campos:
+   - **Entidade** (obrigatória): escolha a entidade parceira.
+   - **Tipo de Resposta** (opcional): escolha entre aceite, recusada, em espera, etc.
+   - **Descrição do Encaminhamento** (obrigatória): texto livre.
+   - **Encaminhamento realizado?**: marque a checkbox se já tiver sido efetuado.
+   - **Data da Resposta**: preencha se disponível.
+   - **Tempo de Resposta (dias)**: número de dias entre a intervenção e a resposta.
+   - **Observações**: campo livre.
+4. Clique em **Criar Encaminhamento**.
+
+### 6.4. Editar um encaminhamento
+
+Semelhante à criação. O formulário é pré‑preenchido com os dados atuais. Pode alterar a intervenção associada, a entidade, a resposta, etc.
+
+### 6.5. Eliminar um encaminhamento
+
+A eliminação é simples e imediata – confirme a ação. Não existem dependências a outras tabelas.
+
+---
+
+## 7. Gestão de Contactos (Idosos)
+
+Os contactos registam as interações com os idosos.
+
+### 7.1. Listar contactos
+
+No menu, clique em **Contactos**. A tabela mostra: ID, idoso, tipo, data/hora, frequência, observações, administrador e ações. Ordenação decrescente por data.
+
+### 7.2. Ver detalhe de um contacto
+
+Clique em **Ver**. A página mostra os dados do contacto e um resumo do idoso (nome, idade, zona, “vive sozinho”, etc.) na data do contacto.
+
+### 7.3. Criar um novo contacto
+
+1. Clique em **Novo Contacto**.
+2. **Selecionar Idoso**: utilize o Select2 com pesquisa por nome ou código.
+3. Preencha:
+   - **Tipo de Contacto** (obrigatório): visita, chamada, atividade em grupo, etc.
+   - **Frequência de Contacto** (opcional): único, semanal, etc.
+   - **Data e Hora** (obrigatória): selecione a data/hora.
+   - **Observações**: texto livre.
+4. Clique em **Criar Contacto**.
+
+### 7.4. Editar um contacto
+
+Semelhante à criação. O formulário é pré‑preenchido.
+
+### 7.5. Eliminar um contacto
+
+A eliminação é simples e imediata. O contacto é removido permanentemente.
+
+---
+
+## 8. Relatórios PDF
+
+A plataforma permite gerar relatórios mensais e anuais em formato PDF.
+
+1. No **Dashboard**, localize o formulário na parte superior da página.
+2. Introduza o **ano** (obrigatório) e, opcionalmente, o **mês** (número de 1 a 12).
+3. Clique em **Gerar Relatório**.
+   - Se indicar mês, será gerado um relatório mensal.
+   - Se deixar o mês vazio, será gerado um relatório anual (apenas se o ano já estiver concluído).
+4. O relatório será descarregado automaticamente com um nome como `relatorio_anual_2026.pdf` ou `relatorio_mensal_2026_03.pdf`.
+
+O relatório contém os mesmos indicadores do Dashboard, mas filtrados exclusivamente pelo período selecionado. Todos os dados são extraídos do histórico, garantindo a fidelidade temporal.
+
+---
+
+## 9. Histórico de Alterações
+
+A plataforma guarda todas as versões anteriores dos registos de utentes (socioeconómicos e idosos). Para aceder:
+
+1. Na página de detalhe de um utente, clique em **Histórico** (botão com ícone de relógio).
+2. Será apresentada uma lista com todas as versões guardadas (data/hora, utilizador que efetuou a alteração).
+3. Clique em **Ver versão** para visualizar o estado do utente nessa data. A página de detalhe será renderizada com um aviso de que se trata de uma versão antiga.
+4. Pode eliminar uma versão específica (clique em **Eliminar** ao lado da versão) ou limpar todo o histórico (usando o botão **Limpar tudo** – cuidado: esta ação é irreversível).
+
+---
+
+## 10. Dicas e Boas Práticas
+
+- **Pesquisa**: utilize sempre a pesquisa por nome para encontrar rapidamente os utentes.
+- **Datas**: certifique‑se de que as datas estão corretas – a plataforma não permite datas futuras.
+- **Problemáticas**: ao editar um utente, desmarque uma problemática para a resolver (data de resolução será hoje). Se quiser associar a resolução a uma intervenção, selecione‑a no *dropdown* que surge.
+- **Histórico**: consulte o histórico sempre que precisar de recuperar informação ou auditar alterações.
+- **Relatórios**: guarde os relatórios PDF para registo ou para partilha com entidades parceiras.
+- **Eliminações**: tenha especial cuidado com eliminações – são permanentes. Verifique sempre se o utente ou intervenção não tem dependências ativas (intervenções/encaminhamentos/contactos).
+
+---
+*Manual elaborado para a versão atual da plataforma. Dúvidas adicionais devem ser dirigidas ao administrador do sistema.*
