@@ -28,7 +28,7 @@ def dashboard(request):
         contactos_data = [total for _, _, total in contactos_mes]
 
         # 4. Problemáticas mais frequentes
-        cursor.execute("SELECT problematica, total_ocorrencias FROM vw_problematicas_ocorridas")
+        cursor.execute("SELECT problematica, total_casos_ativos FROM vw_problematicas_ocorridas")
         problematicas = cursor.fetchall()
         problematica_labels = [p[0] for p in problematicas]
         problematica_data = [p[1] for p in problematicas]
