@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 def dashboard(request):
     with connection.cursor() as cursor:
         # 1. Totais gerais
-        cursor.execute("SELECT * FROM vista_totais_gerais")
+        cursor.execute("SELECT * FROM vw_totais_gerais")
         row = cursor.fetchone()
         totais = {
             'total_idosos': row[0],
