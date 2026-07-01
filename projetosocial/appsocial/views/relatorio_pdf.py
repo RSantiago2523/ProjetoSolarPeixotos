@@ -44,7 +44,7 @@ def relatorio_pdf_form(request):
         return redirect('dashboard')
 
     if ano == ano_atual and mes is not None and mes > mes_atual:
-        messages.error(request, f'Não é possível gerar relatório para o mês {mes} do ano {ano} porque ainda não terminou.')
+        messages.error(request, f'Não é possível gerar relatório para o mês {mes} do ano {ano} porque ainda não chegou.')
         return redirect('dashboard')
 
     if ano == ano_atual and mes is None:
@@ -81,15 +81,21 @@ def relatorio_pdf(request, ano, mes=None):
         # ----- Totais gerais -----
         cursor.execute("""
             SELECT 
-                COUNT(DISTINCT CASE WHEN u.id_tipo_utente = 2 THEN u.id_utente END) AS total_idosos,
-                COUNT(DISTINCT CASE WHEN u.id_tipo_utente = 1 THEN u.id_utente END) AS total_socioeconomicos,
+                COUNT(DISTINCT CASE WHEN u.id_tipo_utente = 2 AND u.data_criacao BETWEEN %s AND %s THEN u.id_utente END) AS total_idosos,
+                COUNT(DISTINCT CASE WHEN u.id_tipo_utente = 1 AND u.data_criacao BETWEEN %s AND %s THEN u.id_utente END) AS total_socioeconomicos,
                 COUNT(DISTINCT i.id_intervencao) AS total_intervencoes,
                 COUNT(DISTINCT c.id_contacto) AS total_contactos
             FROM UTENTES u
             LEFT JOIN INTERVENCAO i ON i.data_intervencao BETWEEN %s AND %s
             LEFT JOIN CONTACTO c ON c.data_contacto BETWEEN %s AND %s
-            WHERE u.data_criacao BETWEEN %s AND %s
-        """, [data_inicio, data_fim, data_inicio, data_fim, data_inicio, data_fim])
+            WHERE (u.data_criacao BETWEEN %s AND %s OR i.id_intervencao IS NOT NULL OR c.id_contacto IS NOT NULL)
+        """, [
+            data_inicio, data_fim,  # para idosos
+            data_inicio, data_fim,  # para socioeconómicos
+            data_inicio, data_fim,  # para intervenções
+            data_inicio, data_fim,  # para contactos
+            data_inicio, data_fim   # para a cláusula WHERE
+        ])
         row = cursor.fetchone()
         totais = {
             'total_idosos': row[0] or 0,
