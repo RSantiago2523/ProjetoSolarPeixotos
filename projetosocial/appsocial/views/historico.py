@@ -34,6 +34,7 @@ def guardar_historico_utente(request, id_utente):
                 u.ID_UTENTE,
                 u.NOME_UTENTE,
                 EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.DATA_NASCIMENTO)) AS idade,
+                g.DESCRICAO_GENERO AS sexo,
                 n.DESCRICAO_NACIONALIDADE,
                 z.DESCRICAO_ZONA_UTENTE,
                 sh.DESCRICAO_SITUACAO_HABITACIONAL,
@@ -44,6 +45,7 @@ def guardar_historico_utente(request, id_utente):
                 usec.OBSERVACOES_UTENTE,
                 usec.CRITERIO_RISCO
             FROM UTENTES u
+            JOIN GENERO g ON u.ID_GENERO = g.ID_GENERO
             JOIN UTENTES_SOCIO_ECONOMICAS usec ON u.ID_UTENTE = usec.ID_UTENTE
             JOIN NACIONALIDADE n ON usec.ID_NACIONALIDADE = n.ID_NACIONALIDADE
             JOIN ZONA_UTENTE z ON u.ID_ZONA_UTENTE = z.ID_ZONA_UTENTE
@@ -139,15 +141,16 @@ def guardar_historico_utente(request, id_utente):
                 'id_utente': principal[0],
                 'nome': principal[1],
                 'idade': principal[2],
-                'nacionalidade': principal[3],
-                'zona': principal[4],
-                'situacao_habitacional': principal[5],
-                'situacao_laboral': principal[6],
-                'tipo_rendimento': principal[7],
-                'tipologia_agregado': principal[8],
-                'risco_social': principal[9],
-                'observacoes': principal[10] or '',
-                'criterio_risco': principal[11] or '',
+                'sexo': principal[3],
+                'nacionalidade': principal[4],
+                'zona': principal[5],
+                'situacao_habitacional': principal[6],
+                'situacao_laboral': principal[7],
+                'tipo_rendimento': principal[8],
+                'tipologia_agregado': principal[9],
+                'risco_social': principal[10],
+                'observacoes': principal[11] or '',
+                'criterio_risco': principal[12] or '',
             },
             'intervencoes': [
                 {
