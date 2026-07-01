@@ -177,6 +177,7 @@ def dashboard(request):
         cursor.execute("""
             SELECT nome_utente, grau_inicial, grau_final, isolamento_inicial, isolamento_final, melhorou
             FROM vw_melhorias
+            WHERE melhorou = 1
         """)
         melhorias = cursor.fetchall()
 
