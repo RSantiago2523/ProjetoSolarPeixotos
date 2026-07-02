@@ -9,13 +9,16 @@ Este manual destina‑se aos administradores e técnicos da Junta de Freguesia d
 A plataforma está disponível num navegador web (Chrome, Firefox, Edge, etc.). Para aceder:
 
 1. Abra o navegador e introduza o endereço fornecido.
-2. Na página de login, introduza o seu "email" e a "palavra‑passe" atribuídos.
+2. Na página de login, introduza o seu "Username" e a "Password" atribuídos.
 3. Clique em "Entrar".
 
-Após a autenticação, será redirecionado para o "Dashboard", que é a página inicial da plataforma. Se as credenciais estiverem incorretas, surgirá uma mensagem de erro.
+Após a autenticação, será redirecionado para a página principal "Home", que é a página inicial da plataforma. Se as credenciais estiverem incorretas, surgirá uma mensagem de erro.
 
-"Nota": Apenas utilizadores registados na base de dados (tabela "ADMINISTRADORES") têm acesso. Caso não consiga entrar, contacte o administrador do sistema.
+"Nota": Apenas os utilizadores com as devidas credenciais atribuídas é que podem aceder ao sistema.
 
+Na página principal "Home", é a página inicial da plataforma, possui no canto superior esquerdo o link "Intervenção Social Comunitária" para a própria página.
+Ao lado possui o botão de dashboard que apresenta as estatísticas dos dados. E no canto superior direito é o botão para Sair da Plataforma.
+E na parte central, estão os cards ou as opções de Gestão de Informações completa de Utentes (Socioeconómicos ou Idosos), Intervenções e Encaminhamentos aos Socioeconómicos e Contactos aos Idosos.
 ---
 
 ## 2. Dashboard – Visão geral dos indicadores
@@ -37,7 +40,7 @@ O Dashboard é uma das página principais da plataforma. Apresenta um conjunto d
 - "Melhorias após participação" – comparação do estado inicial vs. atual.
 - "Visitas prioritárias" – situações que requerem atenção imediata (isolamento, quedas repetidas, falta de rede de suporte).
 
-Os gráficos são interativos e a informação é atualizada automaticamente sempre que os dados são alterados. Para gerar relatórios PDF mensais ou anuais, utilize o formulário no topo da página (ver secção 8).
+Os gráficos são interativos e a informação é atualizada automaticamente sempre que os dados são alterados. Para gerar relatórios PDF mensais ou anuais (ver secção 8 do manual).
 
 ---
 
