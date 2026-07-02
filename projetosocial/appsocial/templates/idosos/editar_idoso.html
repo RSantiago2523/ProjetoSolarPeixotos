@@ -55,6 +55,12 @@
         .form-check {
             margin-bottom: 0.5rem;
         }
+        .scrollable-checkboxes {
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -314,6 +320,7 @@
                     <div class="card card-custom mb-4">
                         <div class="card-body p-4">
                             <h5 class="section-title">Doenças Crónicas</h5>
+                            <div class="scrollable-checkboxes">
                             {% for d in doencas_cronicas %}
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="doencas" value="{{ d.id_doenca_cronica }}"
@@ -323,6 +330,7 @@
                             {% empty %}
                                 <p class="text-muted">Não existem doenças registadas.</p>
                             {% endfor %}
+                            </div>
                             <hr>
                             <div class="mb-3">
                                 <label class="form-label">Nova doença crónica (opcional)</label>
@@ -336,6 +344,7 @@
                     <div class="card card-custom mb-4">
                         <div class="card-body p-4">
                             <h5 class="section-title">Barreiras Arquitetónicas</h5>
+                            <div class="scrollable-checkboxes">
                             {% for b in barreiras_arquitetonicas %}
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="barreiras" value="{{ b.id_barreira_arquitetonica }}"
@@ -345,6 +354,7 @@
                             {% empty %}
                                 <p class="text-muted">Não existem barreiras registadas.</p>
                             {% endfor %}
+                            </div>
                             <hr>
                             <div class="mb-3">
                                 <label class="form-label">Nova barreira arquitetónica (opcional)</label>
@@ -358,6 +368,7 @@
                     <div class="card card-custom mb-4">
                         <div class="card-body p-4">
                             <h5 class="section-title">Sinais de Fragilidade</h5>
+                            <div class="scrollable-checkboxes">
                             {% for f in sinais_fragilidade %}
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="fragilidades" value="{{ f.id_sinal_fragilidade }}"
@@ -367,6 +378,7 @@
                             {% empty %}
                                 <p class="text-muted">Não existem sinais de fragilidade registados.</p>
                             {% endfor %}
+                            </div>
                             <hr>
                             <div class="mb-3">
                                 <label class="form-label">Novo sinal de fragilidade (opcional)</label>
