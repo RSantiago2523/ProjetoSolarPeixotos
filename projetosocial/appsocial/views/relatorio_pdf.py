@@ -80,22 +80,12 @@ def relatorio_pdf(request, ano, mes=None):
 
         # ----- Totais gerais -----
         cursor.execute("""
-            SELECT 
-                COUNT(DISTINCT CASE WHEN u.id_tipo_utente = 2 AND u.data_criacao BETWEEN %s AND %s THEN u.id_utente END) AS total_idosos,
-                COUNT(DISTINCT CASE WHEN u.id_tipo_utente = 1 AND u.data_criacao BETWEEN %s AND %s THEN u.id_utente END) AS total_socioeconomicos,
-                COUNT(DISTINCT i.id_intervencao) AS total_intervencoes,
-                COUNT(DISTINCT c.id_contacto) AS total_contactos
-            FROM UTENTES u
-            LEFT JOIN INTERVENCAO i ON i.data_intervencao BETWEEN %s AND %s
-            LEFT JOIN CONTACTO c ON c.data_contacto BETWEEN %s AND %s
-            WHERE (u.data_criacao BETWEEN %s AND %s OR i.id_intervencao IS NOT NULL OR c.id_contacto IS NOT NULL)
-        """, [
-            data_inicio, data_fim,  # para idosos
-            data_inicio, data_fim,  # para socioeconómicos
-            data_inicio, data_fim,  # para intervenções
-            data_inicio, data_fim,  # para contactos
-            data_inicio, data_fim   # para a cláusula WHERE
-        ])
+            SELECT
+                (SELECT COUNT(*) FROM UTENTES WHERE id_tipo_utente = 2 AND data_criacao BETWEEN %s AND %s) AS total_idosos,
+                (SELECT COUNT(*) FROM UTENTES WHERE id_tipo_utente = 1 AND data_criacao BETWEEN %s AND %s) AS total_socioeconomicos,
+                (SELECT COUNT(*) FROM INTERVENCAO WHERE data_intervencao BETWEEN %s AND %s) AS total_intervencoes,
+                (SELECT COUNT(*) FROM CONTACTO WHERE data_contacto BETWEEN %s AND %s) AS total_contactos
+        """, [data_inicio, data_fim, data_inicio, data_fim, data_inicio, data_fim, data_inicio, data_fim])
         row = cursor.fetchone()
         totais = {
             'total_idosos': row[0] or 0,
@@ -385,16 +375,23 @@ def relatorio_pdf(request, ano, mes=None):
         programas_data = [p[1] for p in programas]
 
         # ----- Evolução de problemáticas -----
-        cursor.execute("""
-            SELECT ano_mes, novos_casos, ativos_fim_mes
-            FROM vw_evolucao_problematicas
-            ORDER BY mes
-        """)
-        evolucao_all = cursor.fetchall()
         if mes:
-            evolucao = [row for row in evolucao_all if row[0] == f"{ano}-{mes:02d}"]
+            # Mês específico
+            cursor.execute("""
+                SELECT ano_mes, novos_casos, ativos_fim_mes
+                FROM vw_evolucao_problematicas
+                WHERE mes BETWEEN %s AND %s
+                ORDER BY mes
+            """, [data_inicio, data_fim])   # data_inicio e data_fim são datetime
         else:
-            evolucao = [row for row in evolucao_all if row[0].startswith(f"{ano}-")]
+            # Ano completo
+            cursor.execute("""
+                SELECT ano_mes, novos_casos, ativos_fim_mes
+                FROM vw_evolucao_problematicas
+                WHERE mes BETWEEN %s AND %s
+                ORDER BY mes
+            """, [data_inicio, data_fim])
+        evolucao = cursor.fetchall()
         evolucao_labels = [row[0] for row in evolucao]
         evolucao_novos = [row[1] for row in evolucao]
         evolucao_ativos = [row[2] for row in evolucao]
@@ -619,7 +616,7 @@ def relatorio_pdf(request, ano, mes=None):
                     hi.snapshot_json->'principal'->>'grau_autonomia' AS grau_inicio,
                     hi.snapshot_json->'principal'->>'nivel_isolamento' AS isolamento_inicio
                 FROM historico_idoso hi
-                WHERE hi.data_historico >= %s
+                WHERE hi.data_historico BETWEEN %s AND %s
                 ORDER BY hi.id_utente, hi.data_historico ASC
             ),
             snapshots_fim AS (
@@ -628,7 +625,7 @@ def relatorio_pdf(request, ano, mes=None):
                     hi.snapshot_json->'principal'->>'grau_autonomia' AS grau_fim,
                     hi.snapshot_json->'principal'->>'nivel_isolamento' AS isolamento_fim
                 FROM historico_idoso hi
-                WHERE hi.data_historico <= %s
+                WHERE hi.data_historico BETWEEN %s AND %s
                 ORDER BY hi.id_utente, hi.data_historico DESC
             )
             SELECT 
@@ -652,7 +649,7 @@ def relatorio_pdf(request, ano, mes=None):
                 WHERE c.id_utente = i.id_utente
                     AND c.data_contacto BETWEEN %s AND %s
             )
-        """, [data_inicio, data_fim, data_inicio, data_fim])
+        """, [data_inicio, data_fim, data_inicio, data_fim, data_inicio, data_fim])
         melhorias = cursor.fetchall()
 
         # ----- Agravamento do grau de dependência (qualquer piora dentro do período) -----
