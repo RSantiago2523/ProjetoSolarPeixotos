@@ -330,7 +330,7 @@ def relatorio_pdf(request, ano, mes=None):
                     AND u.data_criacao BETWEEN %s AND %s
                 ORDER BY hi.id_utente, hi.data_historico DESC
             )
-            SELECT COUNT(*) FROM snapshots_mais_recentes WHERE autonomia != 'Autonomo'
+            SELECT COUNT(*) FROM snapshots_mais_recentes WHERE autonomia != 'Autónomo'
         """, [data_fim, data_inicio, data_fim])
         row = cursor.fetchone()
         total_dependentes = row[0] if row else 0
