@@ -69,12 +69,12 @@ def relatorio_pdf(request, ano, mes=None):
     if mes:
         data_inicio = datetime(ano, mes, 1)
         if mes == 12:
-            data_fim = datetime(ano + 1, 1, 1) - timedelta(days=1)
+            data_fim = datetime(ano + 1, 1, 1) - timedelta(seconds=1)
         else:
-            data_fim = datetime(ano, mes + 1, 1) - timedelta(days=1)
+            data_fim = datetime(ano, mes + 1, 1) - timedelta(seconds=1)
     else:
         data_inicio = datetime(ano, 1, 1)
-        data_fim = datetime(ano, 12, 31)
+        data_fim = datetime(ano, 12, 31, 23, 59, 59)
 
     with connection.cursor() as cursor:
 
@@ -627,28 +627,34 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM historico_idoso hi
                 WHERE hi.data_historico BETWEEN %s AND %s
                 ORDER BY hi.id_utente, hi.data_historico DESC
+            ),
+            comparacao AS (
+                SELECT 
+                    i.nome AS nome_utente,
+                    i.grau_inicio,
+                    f.grau_fim,
+                    i.isolamento_inicio,
+                    f.isolamento_fim,
+                    CASE 
+                        WHEN (i.grau_inicio = 'Dependente' AND f.grau_fim IN ('Parcialmente dependente', 'Autónomo'))
+                        OR (i.grau_inicio = 'Parcialmente dependente' AND f.grau_fim = 'Autónomo')
+                        OR (i.isolamento_inicio = 'Elevado' AND f.isolamento_fim IN ('Moderado', 'Nenhum'))
+                        OR (i.isolamento_inicio = 'Moderado' AND f.isolamento_fim = 'Nenhum')
+                        THEN 1 ELSE 0
+                    END AS melhorou
+                FROM snapshots_inicio i
+                JOIN snapshots_fim f ON i.id_utente = f.id_utente
+                WHERE i.grau_inicio IS NOT NULL AND f.grau_fim IS NOT NULL
+                AND EXISTS (
+                    SELECT 1 FROM contacto c
+                    WHERE c.id_utente = i.id_utente
+                        AND c.data_contacto BETWEEN %s AND %s
+                )
             )
-            SELECT 
-                i.nome AS nome_utente,
-                i.grau_inicio,
-                f.grau_fim,
-                i.isolamento_inicio,
-                f.isolamento_fim,
-                CASE 
-                    WHEN (i.grau_inicio = 'Dependente' AND f.grau_fim IN ('Parcialmente dependente', 'Autónomo'))
-                    OR (i.grau_inicio = 'Parcialmente dependente' AND f.grau_fim = 'Autónomo')
-                    OR (i.isolamento_inicio = 'Elevado' AND f.isolamento_fim IN ('Moderado', 'Nenhum'))
-                    OR (i.isolamento_inicio = 'Moderado' AND f.isolamento_fim = 'Nenhum')
-                    THEN 1 ELSE 0
-                END AS melhorou
-            FROM snapshots_inicio i
-            JOIN snapshots_fim f ON i.id_utente = f.id_utente
-            WHERE i.grau_inicio IS NOT NULL AND f.grau_fim IS NOT NULL
-            AND EXISTS (
-                SELECT 1 FROM contacto c
-                WHERE c.id_utente = i.id_utente
-                    AND c.data_contacto BETWEEN %s AND %s
-            )
+            SELECT nome_utente, grau_inicio, grau_fim, isolamento_inicio, isolamento_fim, melhorou
+            FROM comparacao
+            WHERE melhorou = 1
+            ORDER BY nome_utente
         """, [data_inicio, data_fim, data_inicio, data_fim, data_inicio, data_fim])
         melhorias = cursor.fetchall()
 
@@ -808,7 +814,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.5*cm))
 
     # ---- Perfil Demográfico - Socioeconómicos ----
-    story.append(Paragraph(f"Perfil Demografico - Socioeconomicos (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Perfil Demografico - Socioeconomicos criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if socio_labels:
         table_data = [[Paragraph("Faixa Etaria", celula_estilo), Paragraph("Total", celula_estilo)]]
         for label, val in zip(socio_labels, socio_data):
@@ -819,7 +825,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.3*cm))
 
     # ---- Perfil Demográfico - Idosos ----
-    story.append(Paragraph(f"Perfil Demografico - Idosos (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Perfil Demografico - Idosos criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if idosos_faixa_labels:
         table_data = [[Paragraph("Faixa Etaria", celula_estilo), Paragraph("Total", celula_estilo)]]
         for label, val in zip(idosos_faixa_labels, idosos_faixa_data):
@@ -830,7 +836,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.3*cm))
 
     # ---- Distribuição por Género ----
-    story.append(Paragraph(f"Distribuicao por Genero (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Distribuicao por Genero criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     texto_socio = ", ".join([f"{g}: {v}" for g, v in zip(genero_socio_labels, genero_socio_data)]) or "Sem dados"
     texto_idosos_gen = ", ".join([f"{g}: {v}" for g, v in zip(genero_idosos_labels, genero_idosos_data)]) or "Sem dados"
     story.append(Paragraph(f"<b>Socioeconomicos:</b> {texto_socio}", normal_estilo))
@@ -838,7 +844,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.3*cm))
 
     # ---- Autonomia dos Idosos ----
-    story.append(Paragraph(f"Nivel de Autonomia dos Idosos (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Nivel de Autonomia dos Idosos criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if autonomia_labels:
         table_data = [[Paragraph("Grau de Autonomia", celula_estilo), Paragraph("Total", celula_estilo)]]
         for label, val in zip(autonomia_labels, autonomia_data):
@@ -849,7 +855,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.3*cm))
 
     # ---- Isolamento dos Idosos ----
-    story.append(Paragraph(f"Nivel de Isolamento dos Idosos (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Nivel de Isolamento dos Idosos criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if isolamento_labels:
         table_data = [[Paragraph("Nivel", celula_estilo), Paragraph("Total", celula_estilo)]]
         for label, val in zip(isolamento_labels, isolamento_data):
@@ -860,7 +866,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.3*cm))
 
     # ---- ADICIONADO: Risco Social (Socioeconómicos) ----
-    story.append(Paragraph(f"Risco Social - Socioeconomicos (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Risco Social - Socioeconomicos criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if risco_labels:
         table_data = [[Paragraph("Situacao", celula_estilo), Paragraph("Total", celula_estilo)]]
         for label, val in zip(risco_labels, risco_data):
@@ -871,7 +877,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.5*cm))
 
     # ---- Idosos em Isolamento Elevado e que Vivem Sozinhos ----
-    story.append(Paragraph(f"Idosos em Isolamento Elevado e que Vivem Sozinhos (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Idosos em Isolamento Elevado e que Vivem Sozinhos criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if idosos_isolados:
         table_data = [[
             Paragraph("Nome", celula_estilo), Paragraph("Idade", celula_estilo),
@@ -950,7 +956,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.5*cm))
 
     # ---- Idosos sem Contacto no Período ----
-    story.append(Paragraph("Idosos sem contacto no periodo", subtitulo_estilo))
+    story.append(Paragraph("Idosos criados no periodo e sem contacto no periodo", subtitulo_estilo))
     if idosos_sem_contacto:
         table_data = [[Paragraph("Nome", celula_estilo)]]
         for iso in idosos_sem_contacto:
