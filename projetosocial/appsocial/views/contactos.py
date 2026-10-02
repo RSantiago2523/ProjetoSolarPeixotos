@@ -112,6 +112,8 @@ def contactos_novo(request):
             errors.append('O tipo de contacto é obrigatório.')
         if not data_contacto:
             errors.append('A data do contacto é obrigatória.')
+        if not id_frequencia_contacto:
+            errors.append('A frequência de contacto é obrigatória.')
 
         if errors:
             for err in errors:
@@ -136,7 +138,7 @@ def contactos_novo(request):
                 contacto = models.Contacto.objects.create(
                     id_administrador_id=id_administrador,
                     id_tipo_contacto_id=id_tipo_contacto,
-                    id_frequencia_contacto_id=id_frequencia_contacto if id_frequencia_contacto else None,
+                    id_frequencia_contacto_id=id_frequencia_contacto,
                     id_utente_id=id_utente,
                     data_contacto=data_contacto,
                     observacoes_contacto=observacoes,
@@ -187,6 +189,8 @@ def contactos_editar(request, id):
             errors.append('O tipo de contacto é obrigatório.')
         if not data_contacto:
             errors.append('A data do contacto é obrigatória.')
+        if not id_frequencia_contacto:
+            errors.append('A frequência de contacto é obrigatória.')
 
         if errors:
             for err in errors:
@@ -212,7 +216,7 @@ def contactos_editar(request, id):
             with transaction.atomic():
                 contacto.id_utente_id = id_utente
                 contacto.id_tipo_contacto_id = id_tipo_contacto
-                contacto.id_frequencia_contacto_id = id_frequencia_contacto if id_frequencia_contacto else None
+                contacto.id_frequencia_contacto_id = id_frequencia_contacto
                 contacto.data_contacto = data_contacto
                 contacto.observacoes_contacto = observacoes
                 contacto.save()

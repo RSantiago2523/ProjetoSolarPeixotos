@@ -94,7 +94,8 @@ def socioeconomicos_detalhe(request, id_utente):
         utente = cursor.fetchone()
 
         if not utente:
-            return render(request, '404.html', status=404)
+            messages.error(request, 'Utente não encontrado.')
+            return redirect('socioeconomicos_lista')
 
         # 2 Intervenções
         cursor.execute("""

@@ -131,6 +131,8 @@ def encaminhamentos_novo(request):
             errors.append('A entidade é obrigatória.')
         if not descricao:
             errors.append('A descrição do encaminhamento é obrigatória.')
+        if not id_tipo_resposta:
+            errors.append('O tipo de resposta do encaminhamento é obrigatório')
 
         if errors:
             for err in errors:
@@ -143,7 +145,7 @@ def encaminhamentos_novo(request):
                 encaminhamento = models.EncaminhamentosRede.objects.create(
                     id_intervencao_id=id_intervencao,
                     id_entidade_id=id_entidade,
-                    id_tipo_resposta_id=id_tipo_resposta if id_tipo_resposta else None,
+                    id_tipo_resposta_id=id_tipo_resposta,
                     descricao_encaminhamento=descricao,
                     encaminhamento_feito=encaminhamento_feito,
                     data_resposta=data_resposta if data_resposta else None,
@@ -215,6 +217,8 @@ def encaminhamentos_editar(request, id):
             errors.append('A entidade é obrigatória.')
         if not descricao:
             errors.append('A descrição do encaminhamento é obrigatória.')
+        if not id_tipo_resposta:
+            errors.append('O tipo de resposta do encaminhamento é obrigatório')
 
         if errors:
             for err in errors:
@@ -226,7 +230,7 @@ def encaminhamentos_editar(request, id):
             with transaction.atomic():
                 encaminhamento.id_intervencao_id = id_intervencao
                 encaminhamento.id_entidade_id = id_entidade
-                encaminhamento.id_tipo_resposta_id = id_tipo_resposta if id_tipo_resposta else None
+                encaminhamento.id_tipo_resposta_id = id_tipo_resposta
                 encaminhamento.descricao_encaminhamento = descricao
                 encaminhamento.encaminhamento_feito = encaminhamento_feito
                 encaminhamento.data_resposta = data_resposta if data_resposta else None
