@@ -152,7 +152,7 @@
                     <i class="bi bi-pencil"></i> Editar
                 </a>
                 <form method="POST" action="{% url 'socioeconomicos_eliminar' utente.0 %}"
-                    onsubmit="return confirm('Tem a certeza que pretende eliminar este idoso? Esta ação é irreversível.');"
+                    onsubmit="return confirm('Tem a certeza que pretende eliminar este utente? Esta ação é irreversível.');"
                     style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">
