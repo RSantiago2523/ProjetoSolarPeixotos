@@ -39,7 +39,8 @@ def dashboard(request):
 
         # 6. Número total de idosos isolados
         cursor.execute("SELECT total_idosos_isolados FROM vw_numero_idosos_isolados")
-        total_isolados = cursor.fetchone()[0] if cursor.rowcount else 0
+        row = cursor.fetchone()
+        total_isolados = row[0] if row else 0
 
         # 7. Idades socioeconómicos
         cursor.execute("SELECT faixa_etaria, total FROM vw_idades_socioeconomicos ORDER BY faixa_etaria")
