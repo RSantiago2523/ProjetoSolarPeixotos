@@ -41,7 +41,7 @@ def idosos_lista(request):
         cursor.execute(query, params)
         todos_idosos = cursor.fetchall()
 
-    # Paginação (50 registos por página)
+    # Paginação (20 registos por página)
     paginator = Paginator(todos_idosos, 20)
     try:
         page_obj = paginator.page(page_number)
@@ -236,12 +236,13 @@ def idosos_novo(request):
         # Validações de campos obrigatórios
         errors = []
 
+        if not nome:
+            errors.append('Nome é obrigatório.')
+                
         # Verificar duplicação de nome (case-insensitive)
         if models.Utentes.objects.filter(nome_utente__iexact=nome).exists():
             errors.append(f'Já existe um utente com o nome "{nome}". Por favor, utilize um nome diferente.')
 
-        if not nome:
-            errors.append('Nome é obrigatório.')
         if not data_nascimento:
             errors.append('Data de nascimento é obrigatória.')
         else:
@@ -276,34 +277,35 @@ def idosos_novo(request):
 
             return redirect('idosos_novo')
 
-        # Processar novas entradas (criar ou obter ID)
-        if nova_doenca:
-            existing = models.DoencasCronicas.objects.filter(descricao_doenca_cronica__iexact=nova_doenca).first()
-            if existing:
-                doencas_ids.append(str(existing.id_doenca_cronica))
-            else:
-                nova = models.DoencasCronicas.objects.create(descricao_doenca_cronica=nova_doenca)
-                doencas_ids.append(str(nova.id_doenca_cronica))
-
-        if nova_barreira:
-            existing = models.BarreirasArquitetonicas.objects.filter(descricao_barreira_arquitetonica__iexact=nova_barreira).first()
-            if existing:
-                barreiras_ids.append(str(existing.id_barreira_arquitetonica))
-            else:
-                nova = models.BarreirasArquitetonicas.objects.create(descricao_barreira_arquitetonica=nova_barreira)
-                barreiras_ids.append(str(nova.id_barreira_arquitetonica))
-
-        if nova_fragilidade:
-            existing = models.SinaisFragilidade.objects.filter(descricao_fragilidade__iexact=nova_fragilidade).first()
-            if existing:
-                fragilidades_ids.append(str(existing.id_sinal_fragilidade))
-            else:
-                nova = models.SinaisFragilidade.objects.create(descricao_fragilidade=nova_fragilidade)
-                fragilidades_ids.append(str(nova.id_sinal_fragilidade))
-
         # Se passou nas validações, criar registos
         try:
             with transaction.atomic():
+
+                # Processar novas entradas (criar ou obter ID)
+                if nova_doenca:
+                    existing = models.DoencasCronicas.objects.filter(descricao_doenca_cronica__iexact=nova_doenca).first()
+                    if existing:
+                        doencas_ids.append(str(existing.id_doenca_cronica))
+                    else:
+                        nova = models.DoencasCronicas.objects.create(descricao_doenca_cronica=nova_doenca)
+                        doencas_ids.append(str(nova.id_doenca_cronica))
+                
+                if nova_barreira:
+                    existing = models.BarreirasArquitetonicas.objects.filter(descricao_barreira_arquitetonica__iexact=nova_barreira).first()
+                    if existing:
+                        barreiras_ids.append(str(existing.id_barreira_arquitetonica))
+                    else:
+                        nova = models.BarreirasArquitetonicas.objects.create(descricao_barreira_arquitetonica=nova_barreira)
+                        barreiras_ids.append(str(nova.id_barreira_arquitetonica))
+                
+                if nova_fragilidade:
+                    existing = models.SinaisFragilidade.objects.filter(descricao_fragilidade__iexact=nova_fragilidade).first()
+                    if existing:
+                        fragilidades_ids.append(str(existing.id_sinal_fragilidade))
+                    else:
+                        nova = models.SinaisFragilidade.objects.create(descricao_fragilidade=nova_fragilidade)
+                        fragilidades_ids.append(str(nova.id_sinal_fragilidade))
+
                 # 3.1 Criar Utentes (tipo_utente = 2 para idoso)
                 utente = models.Utentes.objects.create(
                     id_tipo_utente_id=2,
@@ -535,36 +537,36 @@ def idosos_editar(request, id_utente):
             for err in errors:
                 messages.error(request, err)
             
-            return redirect('idosos_editar', id_utente=id_utente)
-
-        # Processar novas entradas (criar ou obter ID) – ANTES de apagar os registos existentes
-        if nova_doenca:
-            existing = models.DoencasCronicas.objects.filter(descricao_doenca_cronica__iexact=nova_doenca).first()
-            if existing:
-                doencas_ids.append(str(existing.id_doenca_cronica))
-            else:
-                nova = models.DoencasCronicas.objects.create(descricao_doenca_cronica=nova_doenca)
-                doencas_ids.append(str(nova.id_doenca_cronica))
-
-        if nova_barreira:
-            existing = models.BarreirasArquitetonicas.objects.filter(descricao_barreira_arquitetonica__iexact=nova_barreira).first()
-            if existing:
-                barreiras_ids.append(str(existing.id_barreira_arquitetonica))
-            else:
-                nova = models.BarreirasArquitetonicas.objects.create(descricao_barreira_arquitetonica=nova_barreira)
-                barreiras_ids.append(str(nova.id_barreira_arquitetonica))
-
-        if nova_fragilidade:
-            existing = models.SinaisFragilidade.objects.filter(descricao_fragilidade__iexact=nova_fragilidade).first()
-            if existing:
-                fragilidades_ids.append(str(existing.id_sinal_fragilidade))
-            else:
-                nova = models.SinaisFragilidade.objects.create(descricao_fragilidade=nova_fragilidade)
-                fragilidades_ids.append(str(nova.id_sinal_fragilidade))        
+            return redirect('idosos_editar', id_utente=id_utente)       
 
         # Atualizar dados (dentro da transação)
         try:
             with transaction.atomic():
+                # Processar novas entradas (criar ou obter ID) – ANTES de apagar os registos existentes
+                if nova_doenca:
+                    existing = models.DoencasCronicas.objects.filter(descricao_doenca_cronica__iexact=nova_doenca).first()
+                    if existing:
+                        doencas_ids.append(str(existing.id_doenca_cronica))
+                    else:
+                        nova = models.DoencasCronicas.objects.create(descricao_doenca_cronica=nova_doenca)
+                        doencas_ids.append(str(nova.id_doenca_cronica))
+                
+                if nova_barreira:
+                    existing = models.BarreirasArquitetonicas.objects.filter(descricao_barreira_arquitetonica__iexact=nova_barreira).first()
+                    if existing:
+                        barreiras_ids.append(str(existing.id_barreira_arquitetonica))
+                    else:
+                        nova = models.BarreirasArquitetonicas.objects.create(descricao_barreira_arquitetonica=nova_barreira)
+                        barreiras_ids.append(str(nova.id_barreira_arquitetonica))
+                
+                if nova_fragilidade:
+                    existing = models.SinaisFragilidade.objects.filter(descricao_fragilidade__iexact=nova_fragilidade).first()
+                    if existing:
+                        fragilidades_ids.append(str(existing.id_sinal_fragilidade))
+                    else:
+                        nova = models.SinaisFragilidade.objects.create(descricao_fragilidade=nova_fragilidade)
+                        fragilidades_ids.append(str(nova.id_sinal_fragilidade))
+
                 # 1. Atualizar Utentes
                 utente.nome_utente = nome
                 utente.data_nascimento = data_nascimento

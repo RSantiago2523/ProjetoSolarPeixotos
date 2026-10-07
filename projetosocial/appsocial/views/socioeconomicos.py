@@ -219,12 +219,13 @@ def socioeconomicos_novo(request):
         # 2. Validações de campos obrigatórios
         errors = []
 
+        if not nome:
+            errors.append('Nome é obrigatório.')
+        
         # Verificar se já existe um utente com o mesmo nome (case‑insensitive)
         if models.Utentes.objects.filter(nome_utente__iexact=nome).exists():
             errors.append(f'Já existe um utente com o nome "{nome}". Por favor, utilize um nome diferente.')
-
-        if not nome:
-            errors.append('Nome é obrigatório.')
+        
         if not data_nascimento:
             errors.append('Data de nascimento é obrigatória.')
         else:
