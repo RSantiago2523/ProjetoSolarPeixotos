@@ -244,7 +244,7 @@ def historico_utente_detalhe(request, id_utente, id_historico):
         principal['criterio_risco'],
     )
     intervencoes = [
-        (i['id'], i['tipo'], i['entidade'], i['programa'], i['data'], i['observacoes'])
+        (i['id'], i['tipo'], i['entidade'], i['programa'], parse_datetime(i['data']), i['observacoes'])
         for i in snapshot['intervencoes']
     ]
     problematicas = [
