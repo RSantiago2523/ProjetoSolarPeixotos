@@ -60,7 +60,9 @@ def relatorio_pdf(request, ano, mes=None):
     ano = int(ano)
     if mes:
         mes = int(mes)
-        titulo = f"Relatório Mensal - {calendar.month_name[mes]} de {ano}"
+        MESES_PT = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+        titulo = f"Relatório Mensal - {MESES_PT[mes]} de {ano}"
         periodo = f"Período: {calendar.month_name[mes]} {ano}"
     else:
         titulo = f"Relatório Anual - {ano}"
