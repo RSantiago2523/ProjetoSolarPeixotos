@@ -6,6 +6,11 @@ from datetime import date
 from .historico import guardar_historico_idoso
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+IDADE_MINIMA_IDOSO = 65
+
+def calcular_idade(d):
+    hoje = date.today()
+    return hoje.year - d.year - ((hoje.month, hoje.day) < (d.month, d.day))
 
 #Listar Idosos
 @login_required
@@ -238,10 +243,6 @@ def idosos_novo(request):
 
         if not nome:
             errors.append('Nome é obrigatório.')
-                
-        # Verificar duplicação de nome (case-insensitive)
-        if models.Utentes.objects.filter(nome_utente__iexact=nome).exists():
-            errors.append(f'Já existe um utente com o nome "{nome}". Por favor, utilize um nome diferente.')
 
         if not data_nascimento:
             errors.append('Data de nascimento é obrigatória.')
@@ -250,6 +251,11 @@ def idosos_novo(request):
                 data_nasc = date.fromisoformat(data_nascimento)
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
+                elif calcular_idade(data_nasc) < IDADE_MINIMA_IDOSO:
+                    errors.append(f'O idoso tem de ter {IDADE_MINIMA_IDOSO} anos ou mais.')
+                if nome and models.Utentes.objects.filter(
+                        nome_utente__iexact=nome, data_nascimento=data_nasc).exists():
+                    errors.append(f'Já existe um utente com o nome "{nome}" e esta data de nascimento.')
             except ValueError:
                 errors.append('Data de nascimento inválida.')
         if not id_genero:
@@ -512,6 +518,12 @@ def idosos_editar(request, id_utente):
                 data_nasc = date.fromisoformat(data_nascimento)
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
+                elif calcular_idade(data_nasc) < IDADE_MINIMA_IDOSO:
+                    errors.append(f'O idoso tem de ter {IDADE_MINIMA_IDOSO} anos ou mais.')
+                if nome and models.Utentes.objects.filter(
+                        nome_utente__iexact=nome, data_nascimento=data_nasc
+                ).exclude(pk=id_utente).exists():
+                    errors.append(f'Já existe um utente com o nome "{nome}" e esta data de nascimento.')
             except ValueError:
                 errors.append('Data de nascimento inválida.')
         if not id_genero:

@@ -222,10 +222,6 @@ def socioeconomicos_novo(request):
         if not nome:
             errors.append('Nome é obrigatório.')
         
-        # Verificar se já existe um utente com o mesmo nome (case‑insensitive)
-        if models.Utentes.objects.filter(nome_utente__iexact=nome).exists():
-            errors.append(f'Já existe um utente com o nome "{nome}". Por favor, utilize um nome diferente.')
-        
         if not data_nascimento:
             errors.append('Data de nascimento é obrigatória.')
         else:
@@ -234,6 +230,9 @@ def socioeconomicos_novo(request):
                 data_nasc = date.fromisoformat(data_nascimento)
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
+                if nome and models.Utentes.objects.filter(
+                        nome_utente__iexact=nome, data_nascimento=data_nasc).exists():
+                    errors.append(f'Já existe um utente com o nome "{nome}" e esta data de nascimento.')
             except ValueError:
                 errors.append('Data de nascimento inválida.')
         if not id_genero:
@@ -473,6 +472,10 @@ def socioeconomicos_editar(request, id_utente):
                 data_nasc = date.fromisoformat(data_nascimento)
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
+                if nome and models.Utentes.objects.filter(
+                        nome_utente__iexact=nome, data_nascimento=data_nasc
+                ).exclude(pk=id_utente).exists():
+                    errors.append(f'Já existe um utente com o nome "{nome}" e esta data de nascimento.')
             except ValueError:
                 errors.append('Data de nascimento inválida.')
         if not id_genero:
