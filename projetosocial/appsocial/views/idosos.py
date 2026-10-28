@@ -7,6 +7,7 @@ from .historico import guardar_historico_idoso
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 IDADE_MINIMA_IDOSO = 65
+IDADE_MAXIMA = 120
 
 def calcular_idade(d):
     hoje = date.today()
@@ -253,8 +254,12 @@ def idosos_novo(request):
                 data_nasc = date.fromisoformat(data_nascimento)
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
-                elif calcular_idade(data_nasc) < IDADE_MINIMA_IDOSO:
-                    errors.append(f'O idoso tem de ter {IDADE_MINIMA_IDOSO} anos ou mais.')
+                else:
+                    idade = calcular_idade(data_nasc)
+                    if idade < IDADE_MINIMA_IDOSO:
+                        errors.append(f'O idoso tem de ter {IDADE_MINIMA_IDOSO} anos ou mais.')
+                    elif idade > IDADE_MAXIMA:
+                        errors.append(f'A idade não pode ser superior a {IDADE_MAXIMA} anos.')
             except ValueError:
                 errors.append('Data de nascimento inválida.')
         if not id_genero:
@@ -519,8 +524,12 @@ def idosos_editar(request, id_utente):
                 data_nasc = date.fromisoformat(data_nascimento)
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
-                elif calcular_idade(data_nasc) < IDADE_MINIMA_IDOSO:
-                    errors.append(f'O idoso tem de ter {IDADE_MINIMA_IDOSO} anos ou mais.')
+                else:
+                    idade = calcular_idade(data_nasc)
+                    if idade < IDADE_MINIMA_IDOSO:
+                        errors.append(f'O idoso tem de ter {IDADE_MINIMA_IDOSO} anos ou mais.')
+                    elif idade > IDADE_MAXIMA:
+                        errors.append(f'A idade não pode ser superior a {IDADE_MAXIMA} anos.')
             except ValueError:
                 errors.append('Data de nascimento inválida.')
         if not id_genero:

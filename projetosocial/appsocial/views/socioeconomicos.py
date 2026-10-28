@@ -6,6 +6,7 @@ from datetime import date
 from ..views.historico import guardar_historico_utente
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .idosos import calcular_idade, IDADE_MAXIMA
 
 @login_required
 def socioeconomicos_lista(request):
@@ -227,11 +228,12 @@ def socioeconomicos_novo(request):
         if not data_nascimento:
             errors.append('Data de nascimento é obrigatória.')
         else:
-            # verificar se data é válida e não futura
             try:
                 data_nasc = date.fromisoformat(data_nascimento)
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
+                elif calcular_idade(data_nasc) > IDADE_MAXIMA:
+                    errors.append(f'A idade não pode ser superior a {IDADE_MAXIMA} anos.')
             except ValueError:
                 errors.append('Data de nascimento inválida.')
         if not id_genero:
@@ -473,6 +475,8 @@ def socioeconomicos_editar(request, id_utente):
                 data_nasc = date.fromisoformat(data_nascimento)
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
+                elif calcular_idade(data_nasc) > IDADE_MAXIMA:
+                    errors.append(f'A idade não pode ser superior a {IDADE_MAXIMA} anos.')
             except ValueError:
                 errors.append('Data de nascimento inválida.')
         if not id_genero:
