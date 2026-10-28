@@ -231,7 +231,7 @@ def socioeconomicos_novo(request):
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
                 if nome and models.Utentes.objects.filter(
-                        nome_utente__iexact=nome, data_nascimento=data_nasc).exists():
+                        nome_utente__iexact=nome).exists():
                     errors.append(f'Já existe um utente com o nome "{nome}" e esta data de nascimento.')
             except ValueError:
                 errors.append('Data de nascimento inválida.')
@@ -473,8 +473,7 @@ def socioeconomicos_editar(request, id_utente):
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
                 if nome and models.Utentes.objects.filter(
-                        nome_utente__iexact=nome, data_nascimento=data_nasc
-                ).exclude(pk=id_utente).exists():
+                        nome_utente__iexact=nome).exclude(pk=id_utente).exists():
                     errors.append(f'Já existe um utente com o nome "{nome}" e esta data de nascimento.')
             except ValueError:
                 errors.append('Data de nascimento inválida.')
