@@ -254,8 +254,8 @@ def idosos_novo(request):
                 elif calcular_idade(data_nasc) < IDADE_MINIMA_IDOSO:
                     errors.append(f'O idoso tem de ter {IDADE_MINIMA_IDOSO} anos ou mais.')
                 if nome and models.Utentes.objects.filter(
-                        nome_utente__iexact=nome).exists():
-                    errors.append(f'Já existe um utente com o nome "{nome}"')
+                        nome_utente__iexact=nome, data_nascimento=data_nasc).exists():
+                    errors.append(f'Já existe um utente com o nome "{nome}" e esta data de nascimento.')
             except ValueError:
                 errors.append('Data de nascimento inválida.')
         if not id_genero:
@@ -521,8 +521,9 @@ def idosos_editar(request, id_utente):
                 elif calcular_idade(data_nasc) < IDADE_MINIMA_IDOSO:
                     errors.append(f'O idoso tem de ter {IDADE_MINIMA_IDOSO} anos ou mais.')
                 if nome and models.Utentes.objects.filter(
-                        nome_utente__iexact=nome).exclude(pk=id_utente).exists():
-                    errors.append(f'Já existe um utente com o nome "{nome}"')
+                        nome_utente__iexact=nome, data_nascimento=data_nasc
+                ).exclude(pk=id_utente).exists():
+                    errors.append(f'Já existe um utente com o nome "{nome}" e esta data de nascimento.')
             except ValueError:
                 errors.append('Data de nascimento inválida.')
         if not id_genero:
