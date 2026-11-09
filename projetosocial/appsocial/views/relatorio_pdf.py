@@ -121,13 +121,13 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM historico_idoso hi
                 JOIN UTENTES u ON hi.id_utente = u.id_utente
                 WHERE hi.data_historico <= %s
-                    AND u.data_criacao BETWEEN %s AND %s
+                    AND u.data_criacao <= %s
                 ORDER BY hi.id_utente, hi.data_historico DESC
             )
             SELECT nome, idade, nivel_isolamento, vive_sozinho
             FROM snapshots_mais_recentes
             WHERE nivel_isolamento = 'Elevado' AND vive_sozinho = true
-        """, [data_fim, data_inicio, data_fim])
+        """, [data_fim, data_fim])
         idosos_isolados = cursor.fetchall()
         total_isolados = len(idosos_isolados)
 
@@ -140,7 +140,7 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM historico_utente_socioeconomico hus
                 JOIN UTENTES u ON hus.id_utente = u.id_utente
                 WHERE hus.data_historico <= %s
-                    AND u.data_criacao BETWEEN %s AND %s
+                    AND u.data_criacao <= %s
                 ORDER BY hus.id_utente, hus.data_historico DESC
             )
             SELECT 
@@ -157,7 +157,7 @@ def relatorio_pdf(request, ano, mes=None):
             FROM snapshots_mais_recentes
             GROUP BY faixa_etaria
             ORDER BY MIN(idade)
-        """, [data_fim, data_inicio, data_fim])
+        """, [data_fim, data_fim])
         idades_socio = cursor.fetchall()
         socio_labels = [i[0] for i in idades_socio]
         socio_data = [i[1] for i in idades_socio]
@@ -171,7 +171,7 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM historico_idoso hi
                 JOIN UTENTES u ON hi.id_utente = u.id_utente
                 WHERE hi.data_historico <= %s
-                    AND u.data_criacao BETWEEN %s AND %s
+                    AND u.data_criacao <= %s
                 ORDER BY hi.id_utente, hi.data_historico DESC
             )
             SELECT 
@@ -184,7 +184,7 @@ def relatorio_pdf(request, ano, mes=None):
             FROM snapshots_mais_recentes
             GROUP BY faixa_etaria
             ORDER BY MIN(idade)
-        """, [data_fim, data_inicio, data_fim])
+        """, [data_fim, data_fim])
         idades_idosos = cursor.fetchall()
         idosos_faixa_labels = [i[0] for i in idades_idosos]
         idosos_faixa_data = [i[1] for i in idades_idosos]
@@ -198,13 +198,13 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM historico_utente_socioeconomico hus
                 JOIN UTENTES u ON hus.id_utente = u.id_utente
                 WHERE hus.data_historico <= %s
-                    AND u.data_criacao BETWEEN %s AND %s
+                    AND u.data_criacao <= %s
                 ORDER BY hus.id_utente, hus.data_historico DESC
             )
             SELECT genero, COUNT(*) AS total
             FROM snapshots_mais_recentes
             GROUP BY genero
-        """, [data_fim, data_inicio, data_fim])
+        """, [data_fim, data_fim])
         genero_socio = cursor.fetchall()
         genero_socio_labels = [g[0] for g in genero_socio]
         genero_socio_data = [g[1] for g in genero_socio]
@@ -218,13 +218,13 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM historico_idoso hi
                 JOIN UTENTES u ON hi.id_utente = u.id_utente
                 WHERE hi.data_historico <= %s
-                    AND u.data_criacao BETWEEN %s AND %s
+                    AND u.data_criacao <= %s
                 ORDER BY hi.id_utente, hi.data_historico DESC
             )
             SELECT genero, COUNT(*) AS total
             FROM snapshots_mais_recentes
             GROUP BY genero
-        """, [data_fim, data_inicio, data_fim])
+        """, [data_fim, data_fim])
         genero_idosos = cursor.fetchall()
         genero_idosos_labels = [g[0] for g in genero_idosos]
         genero_idosos_data = [g[1] for g in genero_idosos]
@@ -238,14 +238,14 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM historico_idoso hi
                 JOIN UTENTES u ON hi.id_utente = u.id_utente
                 WHERE hi.data_historico <= %s
-                    AND u.data_criacao BETWEEN %s AND %s
+                    AND u.data_criacao <= %s
                 ORDER BY hi.id_utente, hi.data_historico DESC
             )
             SELECT autonomia, COUNT(*) AS total
             FROM snapshots_mais_recentes
             GROUP BY autonomia
             ORDER BY total DESC
-        """, [data_fim, data_inicio, data_fim])
+        """, [data_fim, data_fim])
         autonomia = cursor.fetchall()
         autonomia_labels = [a[0] for a in autonomia]
         autonomia_data = [a[1] for a in autonomia]
@@ -259,14 +259,14 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM historico_idoso hi
                 JOIN UTENTES u ON hi.id_utente = u.id_utente
                 WHERE hi.data_historico <= %s
-                    AND u.data_criacao BETWEEN %s AND %s
+                    AND u.data_criacao <= %s
                 ORDER BY hi.id_utente, hi.data_historico DESC
             )
             SELECT isolamento, COUNT(*) AS total
             FROM snapshots_mais_recentes
             GROUP BY isolamento
             ORDER BY total DESC
-        """, [data_fim, data_inicio, data_fim])
+        """, [data_fim, data_fim])
         isolamento = cursor.fetchall()
         isolamento_labels = [i[0] for i in isolamento]
         isolamento_data = [i[1] for i in isolamento]
@@ -280,7 +280,7 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM historico_utente_socioeconomico hus
                 JOIN UTENTES u ON hus.id_utente = u.id_utente
                 WHERE hus.data_historico <= %s
-                    AND u.data_criacao BETWEEN %s AND %s
+                    AND u.data_criacao <= %s
                 ORDER BY hus.id_utente, hus.data_historico DESC
             )
             SELECT 
@@ -288,7 +288,7 @@ def relatorio_pdf(request, ano, mes=None):
                 COUNT(*) AS total
             FROM snapshots_mais_recentes
             GROUP BY risco_social
-        """, [data_fim, data_inicio, data_fim])
+        """, [data_fim, data_fim])
         risco = cursor.fetchall()
         risco_labels = [r[0] for r in risco]
         risco_data = [r[1] for r in risco]
@@ -302,11 +302,11 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM historico_idoso hi
                 JOIN UTENTES u ON hi.id_utente = u.id_utente
                 WHERE hi.data_historico <= %s
-                    AND u.data_criacao BETWEEN %s AND %s    
+                    AND u.data_criacao <= %s    
                 ORDER BY hi.id_utente, hi.data_historico DESC
             )
             SELECT COUNT(*) FROM snapshots_mais_recentes WHERE vive_sozinho = true
-        """, [data_fim, data_inicio, data_fim])
+        """, [data_fim, data_fim])
         row = cursor.fetchone()
         total_vive_sozinho = row[0] if row else 0
 
@@ -319,11 +319,11 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM historico_idoso hi
                 JOIN UTENTES u ON hi.id_utente = u.id_utente
                 WHERE hi.data_historico <= %s
-                    AND u.data_criacao BETWEEN %s AND %s
+                    AND u.data_criacao <= %s
                 ORDER BY hi.id_utente, hi.data_historico DESC
             )
             SELECT COUNT(*) FROM snapshots_mais_recentes WHERE autonomia != 'Autónomo'
-        """, [data_fim, data_inicio, data_fim])
+        """, [data_fim, data_fim])
         row = cursor.fetchone()
         total_dependentes = row[0] if row else 0
 
@@ -336,7 +336,7 @@ def relatorio_pdf(request, ano, mes=None):
                     (hus.snapshot_json->'principal'->>'risco_social')::boolean AS risco_social
                 FROM historico_utente_socioeconomico hus
                 JOIN UTENTES u ON hus.id_utente = u.id_utente
-                WHERE u.data_criacao BETWEEN %s AND %s
+                WHERE u.data_criacao <= %s
                   AND hus.data_historico <= %s
                 ORDER BY hus.id_utente, hus.data_historico DESC
             )
@@ -347,7 +347,7 @@ def relatorio_pdf(request, ano, mes=None):
             FROM snapshots_mais_recentes
             GROUP BY zona
             ORDER BY zona
-        """, [data_inicio, data_fim, data_fim])
+        """, [data_fim, data_fim])
         zonas_utentes = cursor.fetchall()
 
         # ----- Tipos de intervenção -----
@@ -494,7 +494,7 @@ def relatorio_pdf(request, ano, mes=None):
         """, [data_fim, data_inicio, data_fim])
         quedas_repetidas = cursor.fetchall()
 
-        # ----- Falta de rede de suporte (estado no período, usando snapshot mais recente dentro do período) -----
+        # ----- Falta de rede de suporte -----
         cursor.execute("""
             WITH snapshots_mais_recentes AS (
                 SELECT DISTINCT ON (hi.id_utente)
@@ -506,7 +506,9 @@ def relatorio_pdf(request, ano, mes=None):
                     hi.snapshot_json->'principal'->>'contacto_emergencia' AS contacto_emergencia,
                     hi.snapshot_json->'principal'->>'familiar_referencia' AS familiar_referencia
                 FROM historico_idoso hi
-                WHERE hi.data_historico BETWEEN %s AND %s   -- filtrar pelo período
+                JOIN UTENTES u ON hi.id_utente = u.id_utente
+                WHERE hi.data_historico <= %s
+                AND u.data_criacao <= %s
                 ORDER BY hi.id_utente, hi.data_historico DESC
             )
             SELECT 
@@ -521,10 +523,10 @@ def relatorio_pdf(request, ano, mes=None):
             WHERE vive_sozinho = true
             AND (contacto_emergencia IS NULL OR contacto_emergencia = '')
             AND (familiar_referencia IS NULL OR familiar_referencia = '')
-        """, [data_inicio, data_fim])   # dois parâmetros: início e fim do período
+        """, [data_fim, data_fim])   # dois parâmetros: fim do período
         falta_rede_suporte = cursor.fetchall()
 
-        # ----- Visitas prioritárias (apenas eventos e snapshots dentro do período) -----
+        # ----- Visitas prioritárias -----
         cursor.execute("""
             WITH 
             snapshots_idosos AS (
@@ -538,7 +540,9 @@ def relatorio_pdf(request, ano, mes=None):
                     hi.snapshot_json->'principal'->>'contacto_emergencia' AS contacto_emergencia,
                     hi.snapshot_json->'principal'->>'familiar_referencia' AS familiar_referencia
                 FROM historico_idoso hi
-                WHERE hi.data_historico BETWEEN %s AND %s   -- filtrar snapshots pelo período
+                JOIN UTENTES u ON hi.id_utente = u.id_utente
+                WHERE hi.data_historico <= %s
+                AND u.data_criacao <= %s
                 ORDER BY hi.id_utente, hi.data_historico DESC
             ),
             prioridade1 AS (
@@ -591,7 +595,7 @@ def relatorio_pdf(request, ano, mes=None):
             UNION
             SELECT * FROM prioridade3
             ORDER BY prioridade, idade DESC
-        """, [data_inicio, data_fim, data_inicio, data_fim])   # 1º par: snapshots, 2º par: quedas
+        """, [data_fim, data_fim, data_inicio, data_fim])   # 1º par: snapshots, 2º par: quedas
         visitas_prioritarias = cursor.fetchall()
 
         # ----- Idosos sem contacto no período (apenas criados no período) -----
@@ -599,14 +603,14 @@ def relatorio_pdf(request, ano, mes=None):
             SELECT u.nome_utente, NULL AS ultimo_contacto
             FROM utentes u
             JOIN utentes_idosos ui ON u.id_utente = ui.id_utente
-            WHERE u.data_criacao BETWEEN %s AND %s
+            WHERE u.data_criacao <= %s
             AND NOT EXISTS (
                 SELECT 1 FROM contacto c
                 WHERE c.id_utente = u.id_utente
                     AND c.data_contacto BETWEEN %s AND %s
             )
             ORDER BY u.nome_utente
-        """, [data_inicio, data_fim, data_inicio, data_fim])
+        """, [data_fim, data_inicio, data_fim])
         idosos_sem_contacto = cursor.fetchall()
 
         # ----- Melhorias após participação -----
@@ -618,7 +622,8 @@ def relatorio_pdf(request, ano, mes=None):
                     hi.snapshot_json->'principal'->>'grau_autonomia' AS grau_inicio,
                     hi.snapshot_json->'principal'->>'nivel_isolamento' AS isolamento_inicio
                 FROM historico_idoso hi
-                WHERE hi.data_historico BETWEEN %s AND %s
+                JOIN UTENTES u ON u.id_utente = hi.id_utente
+                WHERE hi.data_historico < %s AND u.data_criacao < %s
                 ORDER BY hi.id_utente, hi.data_historico ASC
             ),
             snapshots_fim AS (
@@ -627,7 +632,8 @@ def relatorio_pdf(request, ano, mes=None):
                     hi.snapshot_json->'principal'->>'grau_autonomia' AS grau_fim,
                     hi.snapshot_json->'principal'->>'nivel_isolamento' AS isolamento_fim
                 FROM historico_idoso hi
-                WHERE hi.data_historico BETWEEN %s AND %s
+                JOIN UTENTES u ON u.id_utente = hi.id_utente
+                WHERE hi.data_historico <= %s AND u.data_criacao <= %s
                 ORDER BY hi.id_utente, hi.data_historico DESC
             ),
             comparacao AS (
@@ -657,7 +663,7 @@ def relatorio_pdf(request, ano, mes=None):
             FROM comparacao
             WHERE melhorou = 1
             ORDER BY nome_utente
-        """, [data_inicio, data_fim, data_inicio, data_fim, data_inicio, data_fim])
+        """, [data_fim, data_fim, data_fim, data_fim, data_inicio, data_fim])
         melhorias = cursor.fetchall()
 
         # ----- Agravamento do grau de dependência (qualquer piora dentro do período) -----
@@ -677,8 +683,9 @@ def relatorio_pdf(request, ano, mes=None):
                         ELSE 0
                     END AS nivel
                 FROM historico_idoso hi
-                WHERE hi.data_historico BETWEEN %s AND %s
-                ORDER BY hi.id_utente, hi.data_historico
+                JOIN UTENTES u ON u.id_utente = hi.id_utente
+                WHERE hi.data_historico < %s AND u.data_criacao < %s
+                ORDER BY hi.id_utente, hi.data_historico DESC
             ),
             agravamentos AS (
                 SELECT DISTINCT s1.id_utente, s1.nome, s1.idade, s1.zona,
@@ -691,7 +698,7 @@ def relatorio_pdf(request, ano, mes=None):
             SELECT nome, idade, zona, grau_anterior, grau_atual
             FROM agravamentos
             ORDER BY nome
-        """, [data_inicio, data_fim])
+        """, [data_fim, data_fim])
         agravamentos = cursor.fetchall()
     # =========================================================
     # --- Construção do PDF ---
@@ -743,14 +750,14 @@ def relatorio_pdf(request, ano, mes=None):
 
     # ---- Indicadores Gerais ----
     story.append(Paragraph("Indicadores Gerais", subtitulo_estilo))
-    story.append(Paragraph(f"<b>Total de Idosos (criados no período):</b> {totais['total_idosos']}", normal_estilo))
-    story.append(Paragraph(f"<b>Total de Utentes Socioeconómicos (criados no período):</b> {totais['total_socioeconomicos']}", normal_estilo))
-    story.append(Paragraph(f"<b>Total de Intervenções (ocorridas no período):</b> {totais['total_intervencoes']}", normal_estilo))
-    story.append(Paragraph(f"<b>Total de Contactos (ocorridos no período):</b> {totais['total_contactos']}", normal_estilo))
+    story.append(Paragraph(f"<b>Total de Idosos criados no período:</b> {totais['total_idosos']}", normal_estilo))
+    story.append(Paragraph(f"<b>Total de Utentes Socioeconómicos criados no período:</b> {totais['total_socioeconomicos']}", normal_estilo))
+    story.append(Paragraph(f"<b>Total de Intervenções ocorridas no período:</b> {totais['total_intervencoes']}", normal_estilo))
+    story.append(Paragraph(f"<b>Total de Contactos ocorridos no período:</b> {totais['total_contactos']}", normal_estilo))
     # ADICIONADO: métricas de idosos que antes estavam em falta
-    story.append(Paragraph(f"<b>Total dos Idosos criados no período que Vivem Sozinhos (estado a {data_fim.strftime('%d/%m/%Y')}):</b> {total_vive_sozinho}", normal_estilo))
-    story.append(Paragraph(f"<b>Total de Idosos criados no período com Dependência (estado a {data_fim.strftime('%d/%m/%Y')}):</b> {total_dependentes}", normal_estilo))
-    story.append(Paragraph(f"<b>Total de Idosos criados no período em Isolamento Elevado e que Vivem Sozinhos (estado a {data_fim.strftime('%d/%m/%Y')}):</b> {total_isolados}", normal_estilo))
+    story.append(Paragraph(f"<b>Total dos Idosos que Vivem Sozinhos (estado a {data_fim.strftime('%d/%m/%Y')}):</b> {total_vive_sozinho}", normal_estilo))
+    story.append(Paragraph(f"<b>Total de Idosos com Dependência (estado a {data_fim.strftime('%d/%m/%Y')}):</b> {total_dependentes}", normal_estilo))
+    story.append(Paragraph(f"<b>Total de Idosos em Isolamento Elevado e que Vivem Sozinhos (estado a {data_fim.strftime('%d/%m/%Y')}):</b> {total_isolados}", normal_estilo))
     story.append(Spacer(1, 0.5*cm))
 
     # ---- Problemáticas ----
@@ -816,7 +823,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.5*cm))
 
     # ---- Perfil Demográfico - Socioeconómicos ----
-    story.append(Paragraph(f"Perfil Demografico - Socioeconomicos criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Perfil Demografico - Socioeconomicos (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if socio_labels:
         table_data = [[Paragraph("Faixa Etaria", celula_estilo), Paragraph("Total", celula_estilo)]]
         for label, val in zip(socio_labels, socio_data):
@@ -827,7 +834,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.3*cm))
 
     # ---- Perfil Demográfico - Idosos ----
-    story.append(Paragraph(f"Perfil Demografico - Idosos criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Perfil Demografico - Idosos (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if idosos_faixa_labels:
         table_data = [[Paragraph("Faixa Etaria", celula_estilo), Paragraph("Total", celula_estilo)]]
         for label, val in zip(idosos_faixa_labels, idosos_faixa_data):
@@ -838,7 +845,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.3*cm))
 
     # ---- Distribuição por Género ----
-    story.append(Paragraph(f"Distribuicao por Genero criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Distribuicao por Genero (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     texto_socio = ", ".join([f"{g}: {v}" for g, v in zip(genero_socio_labels, genero_socio_data)]) or "Sem dados"
     texto_idosos_gen = ", ".join([f"{g}: {v}" for g, v in zip(genero_idosos_labels, genero_idosos_data)]) or "Sem dados"
     story.append(Paragraph(f"<b>Socioeconomicos:</b> {texto_socio}", normal_estilo))
@@ -846,7 +853,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.3*cm))
 
     # ---- Autonomia dos Idosos ----
-    story.append(Paragraph(f"Nivel de Autonomia dos Idosos criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Nivel de Autonomia dos Idosos (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if autonomia_labels:
         table_data = [[Paragraph("Grau de Autonomia", celula_estilo), Paragraph("Total", celula_estilo)]]
         for label, val in zip(autonomia_labels, autonomia_data):
@@ -857,7 +864,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.3*cm))
 
     # ---- Isolamento dos Idosos ----
-    story.append(Paragraph(f"Nivel de Isolamento dos Idosos criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Nivel de Isolamento dos Idosos (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if isolamento_labels:
         table_data = [[Paragraph("Nivel", celula_estilo), Paragraph("Total", celula_estilo)]]
         for label, val in zip(isolamento_labels, isolamento_data):
@@ -868,7 +875,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.3*cm))
 
     # ---- ADICIONADO: Risco Social (Socioeconómicos) ----
-    story.append(Paragraph(f"Risco Social - Socioeconomicos criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Risco Social - Socioeconomicos (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if risco_labels:
         table_data = [[Paragraph("Situacao", celula_estilo), Paragraph("Total", celula_estilo)]]
         for label, val in zip(risco_labels, risco_data):
@@ -879,7 +886,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.5*cm))
 
     # ---- Idosos em Isolamento Elevado e que Vivem Sozinhos ----
-    story.append(Paragraph(f"Idosos em Isolamento Elevado e que Vivem Sozinhos criados no periodo (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Idosos em Isolamento Elevado e que Vivem Sozinhos (estado a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if idosos_isolados:
         table_data = [[
             Paragraph("Nome", celula_estilo), Paragraph("Idade", celula_estilo),
@@ -958,7 +965,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.5*cm))
 
     # ---- Idosos sem Contacto no Período ----
-    story.append(Paragraph("Idosos criados no periodo e sem contacto no periodo", subtitulo_estilo))
+    story.append(Paragraph("Idosos sem contacto no periodo", subtitulo_estilo))
     if idosos_sem_contacto:
         table_data = [[Paragraph("Nome", celula_estilo)]]
         for iso in idosos_sem_contacto:
@@ -1009,7 +1016,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.5*cm))
 
     # ---- Melhorias Após Participação ----
-    story.append(Paragraph("Melhorias apos participacao (comparacao primeiro vs ultimo snapshot)", subtitulo_estilo))
+    story.append(Paragraph("Melhorias apos participacao", subtitulo_estilo))
     if melhorias:
         table_data = [[
             Paragraph("Nome", celula_estilo), Paragraph("Grau inicial", celula_estilo),
@@ -1031,7 +1038,7 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.5*cm))
 
     # ---- Utentes por Zona e Risco Social ----
-    story.append(Paragraph(f"Utentes por Zona e Risco Social (utentes criados no periodo, zona a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Utentes por Zona e Risco Social (zona a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if zonas_utentes:
         table_data = [[
             Paragraph("Zona", celula_estilo),
