@@ -115,7 +115,7 @@ def relatorio_pdf(request, ano, mes=None):
                 SELECT DISTINCT ON (hi.id_utente)
                     hi.id_utente,
                     hi.snapshot_json->'principal'->>'nome' AS nome,
-                    ( (hi.snapshot_json->'principal'->>'idade')::float )::int AS idade,
+                    EXTRACT(YEAR FROM AGE(%s::date, u.data_nascimento))::int AS idade,
                     hi.snapshot_json->'principal'->>'nivel_isolamento' AS nivel_isolamento,
                     (hi.snapshot_json->'principal'->>'vive_sozinho')::boolean AS vive_sozinho
                 FROM historico_idoso hi
@@ -127,7 +127,7 @@ def relatorio_pdf(request, ano, mes=None):
             SELECT nome, idade, nivel_isolamento, vive_sozinho
             FROM snapshots_mais_recentes
             WHERE nivel_isolamento = 'Elevado' AND vive_sozinho = true
-        """, [data_fim, data_fim])
+        """, [data_fim, data_fim, data_fim])
         idosos_isolados = cursor.fetchall()
         total_isolados = len(idosos_isolados)
 
@@ -136,7 +136,7 @@ def relatorio_pdf(request, ano, mes=None):
             WITH snapshots_mais_recentes AS (
                 SELECT DISTINCT ON (hus.id_utente)
                     hus.id_utente,
-                    ( (hus.snapshot_json->'principal'->>'idade')::float )::int AS idade
+                    EXTRACT(YEAR FROM AGE(%s::date, u.data_nascimento))::int AS idade
                 FROM historico_utente_socioeconomico hus
                 JOIN UTENTES u ON hus.id_utente = u.id_utente
                 WHERE hus.data_historico <= %s
@@ -157,7 +157,7 @@ def relatorio_pdf(request, ano, mes=None):
             FROM snapshots_mais_recentes
             GROUP BY faixa_etaria
             ORDER BY MIN(idade)
-        """, [data_fim, data_fim])
+        """, [data_fim, data_fim, data_fim])
         idades_socio = cursor.fetchall()
         socio_labels = [i[0] for i in idades_socio]
         socio_data = [i[1] for i in idades_socio]
@@ -167,7 +167,7 @@ def relatorio_pdf(request, ano, mes=None):
             WITH snapshots_mais_recentes AS (
                 SELECT DISTINCT ON (hi.id_utente)
                     hi.id_utente,
-                    ( (hi.snapshot_json->'principal'->>'idade')::float )::int AS idade
+                    EXTRACT(YEAR FROM AGE(%s::date, u.data_nascimento))::int AS idade
                 FROM historico_idoso hi
                 JOIN UTENTES u ON hi.id_utente = u.id_utente
                 WHERE hi.data_historico <= %s
@@ -184,7 +184,7 @@ def relatorio_pdf(request, ano, mes=None):
             FROM snapshots_mais_recentes
             GROUP BY faixa_etaria
             ORDER BY MIN(idade)
-        """, [data_fim, data_fim])
+        """, [data_fim, data_fim, data_fim])
         idades_idosos = cursor.fetchall()
         idosos_faixa_labels = [i[0] for i in idades_idosos]
         idosos_faixa_data = [i[1] for i in idades_idosos]
@@ -500,7 +500,7 @@ def relatorio_pdf(request, ano, mes=None):
                 SELECT DISTINCT ON (hi.id_utente)
                     hi.id_utente,
                     hi.snapshot_json->'principal'->>'nome' AS nome,
-                    ( (hi.snapshot_json->'principal'->>'idade')::float )::int AS idade,
+                    EXTRACT(YEAR FROM AGE(%s::date, u.data_nascimento))::int AS idade,
                     hi.snapshot_json->'principal'->>'zona' AS zona,
                     (hi.snapshot_json->'principal'->>'vive_sozinho')::boolean AS vive_sozinho,
                     hi.snapshot_json->'principal'->>'contacto_emergencia' AS contacto_emergencia,
@@ -523,7 +523,7 @@ def relatorio_pdf(request, ano, mes=None):
             WHERE vive_sozinho = true
             AND (contacto_emergencia IS NULL OR contacto_emergencia = '')
             AND (familiar_referencia IS NULL OR familiar_referencia = '')
-        """, [data_fim, data_fim])   # dois parâmetros: fim do período
+        """, [data_fim, data_fim, data_fim])   # dois parâmetros: fim do período
         falta_rede_suporte = cursor.fetchall()
 
         # ----- Visitas prioritárias -----
@@ -533,7 +533,7 @@ def relatorio_pdf(request, ano, mes=None):
                 SELECT DISTINCT ON (hi.id_utente)
                     hi.id_utente,
                     hi.snapshot_json->'principal'->>'nome' AS nome,
-                    ( (hi.snapshot_json->'principal'->>'idade')::float )::int AS idade,
+                    EXTRACT(YEAR FROM AGE(%s::date, u.data_nascimento))::int AS idade,
                     hi.snapshot_json->'principal'->>'zona' AS zona,
                     hi.snapshot_json->'principal'->>'nivel_isolamento' AS nivel_isolamento,
                     (hi.snapshot_json->'principal'->>'vive_sozinho')::boolean AS vive_sozinho,
@@ -595,7 +595,7 @@ def relatorio_pdf(request, ano, mes=None):
             UNION
             SELECT * FROM prioridade3
             ORDER BY prioridade, idade DESC
-        """, [data_fim, data_fim, data_inicio, data_fim])   # 1º par: snapshots, 2º par: quedas
+        """, [data_fim, data_fim, data_fim, data_inicio, data_fim])   # 1º par: snapshots, 2º par: quedas
         visitas_prioritarias = cursor.fetchall()
 
         # ----- Idosos sem contacto no período (apenas criados no período) -----
@@ -673,7 +673,7 @@ def relatorio_pdf(request, ano, mes=None):
                     hi.id_utente,
                     hi.data_historico,
                     hi.snapshot_json->'principal'->>'nome' AS nome,
-                    ( (hi.snapshot_json->'principal'->>'idade')::float )::int AS idade,
+                    EXTRACT(YEAR FROM AGE(%s::date, u.data_nascimento))::int AS idade,
                     hi.snapshot_json->'principal'->>'grau_autonomia' AS grau,
                     hi.snapshot_json->'principal'->>'zona' AS zona,
                     CASE 
@@ -698,7 +698,7 @@ def relatorio_pdf(request, ano, mes=None):
             SELECT nome, idade, zona, grau_anterior, grau_atual
             FROM agravamentos
             ORDER BY nome
-        """, [data_fim, data_fim])
+        """, [data_fim, data_fim, data_fim])
         agravamentos = cursor.fetchall()
     # =========================================================
     # --- Construção do PDF ---
