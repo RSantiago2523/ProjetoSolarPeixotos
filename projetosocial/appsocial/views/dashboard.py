@@ -2,6 +2,22 @@ from django.db import connection
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
+def _serie_mensal(linhas):
+    """Devolve (labels, valores) com 0 nos meses sem dados entre o primeiro e o último mês.
+    Ignora linhas sem data (ano/mês nulos)."""
+    por_mes = {(int(a), int(m)): t for a, m, t in linhas if a is not None and m is not None}
+    if not por_mes:
+        return [], []
+    ano, mes = min(por_mes)
+    fim = max(por_mes)
+    labels, valores = [], []
+    while (ano, mes) <= fim:
+        labels.append(f"{ano}-{mes:02d}")
+        valores.append(por_mes.get((ano, mes), 0))
+        ano, mes = (ano + 1, 1) if mes == 12 else (ano, mes + 1)
+    return labels, valores
+
+
 @login_required
 def dashboard(request):
     with connection.cursor() as cursor:
@@ -18,14 +34,12 @@ def dashboard(request):
         # 2. Intervenções por mês
         cursor.execute("SELECT ano, mes, total FROM vw_intervencoes_mes_ano ORDER BY ano, mes")
         intervencoes_mes = cursor.fetchall()
-        intervencoes_labels = [f"{int(ano)}-{int(mes):02d}" for ano, mes, _ in intervencoes_mes]
-        intervencoes_data = [total for _, _, total in intervencoes_mes]
+        intervencoes_labels, intervencoes_data = _serie_mensal(intervencoes_mes)
 
         # 3. Contactos por mês
         cursor.execute("SELECT ano, mes, total_contactos FROM vw_contactos_mes_ano ORDER BY ano, mes")
         contactos_mes = cursor.fetchall()
-        contactos_labels = [f"{int(ano)}-{int(mes):02d}" for ano, mes, _ in contactos_mes]
-        contactos_data = [total for _, _, total in contactos_mes]
+        contactos_labels, contactos_data = _serie_mensal(contactos_mes)
 
         # 4. Problemáticas mais frequentes
         cursor.execute("SELECT problematica, total_casos_ativos FROM vw_problematicas_ocorridas")
@@ -49,7 +63,7 @@ def dashboard(request):
         socio_data = [i[1] for i in idades_socio]
 
         # 8. Idades idosos
-        cursor.execute("SELECT faixa_etaria, total FROM vw_idades_idosos ORDER BY faixa_etaria")
+        cursor.execute("SELECT faixa_etaria, total FROM vw_idades_idosos ORDER BY CASE WHEN faixa_etaria = '<65' THEN 0 ELSE 1 END, faixa_etaria")
         idades_idosos = cursor.fetchall()
         idosos_faixa_labels = [i[0] for i in idades_idosos]
         idosos_faixa_data = [i[1] for i in idades_idosos]

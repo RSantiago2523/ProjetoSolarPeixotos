@@ -11,7 +11,37 @@ from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from datetime import datetime, timedelta
-import calendar
+from xml.sax.saxutils import escape
+
+
+def _validar_periodo(ano, mes):
+    """Devolve a mensagem de erro se o período não for válido (ou None se for válido).
+    Também é usada no acesso direto por URL (/relatorio/<ano>/<mes>/), que não passa pelo formulário."""
+    if ano < 2000:
+        return 'Ano inválido.'
+    if mes is not None and (mes < 1 or mes > 12):
+        return 'Mês inválido (1-12).'
+
+    hoje = datetime.now()
+    ano_atual = hoje.year
+    mes_atual = hoje.month
+
+    if ano > ano_atual:
+        return f'Não é possível gerar relatório para o ano {ano} (ano superior ao atual).'
+
+    if ano == ano_atual and mes is not None and mes > mes_atual:
+        return f'Não é possível gerar relatório para o mês {mes} do ano {ano} porque ainda não chegou.'
+
+    if ano == ano_atual and mes is None:
+        return (f'Não é possível gerar relatório anual para o ano {ano} porque ainda não terminou. '
+                f'Utilize um mês específico (até {mes_atual}) ou aguarde o final do ano.')
+
+    return None
+
+
+def _esc_rows(linhas):
+    """Escapa '&', '<' e '>' nos textos vindos da BD (o Paragraph() interpreta-os como marcação)."""
+    return [tuple(escape(c) if isinstance(c, str) else c for c in linha) for linha in linhas]
 
 
 @login_required
@@ -21,36 +51,25 @@ def relatorio_pdf_form(request):
     Valida que a data não seja futura.
     """
     ano_str = request.GET.get('ano')
-    if not ano_str or not ano_str.isdigit():
+    if not ano_str or not (ano_str.isascii() and ano_str.isdigit()):
         messages.error(request, 'Ano inválido.')
         return redirect('dashboard')
     ano = int(ano_str)
 
     mes_str = request.GET.get('mes')
-    if mes_str and mes_str.isdigit():
+    if mes_str and mes_str.isascii() and mes_str.isdigit():
         mes = int(mes_str)
         if mes < 1 or mes > 12:
             messages.error(request, 'Mês inválido (1-12).')
             return redirect('dashboard')
+    elif mes_str:
+        messages.error(request, 'Mês inválido (1-12).')
+        return redirect('dashboard')
     else:
         mes = None
 
-    hoje = datetime.now()
-    ano_atual = hoje.year
-    mes_atual = hoje.month
-
-    if ano > ano_atual:
-        messages.error(request, f'Não é possível gerar relatório para o ano {ano} (ano superior ao atual).')
-        return redirect('dashboard')
-
-    if ano == ano_atual and mes is not None and mes > mes_atual:
-        messages.error(request, f'Não é possível gerar relatório para o mês {mes} do ano {ano} porque ainda não chegou.')
-        return redirect('dashboard')
-
-    if ano == ano_atual and mes is None:
-        messages.error(request, f'Não é possível gerar relatório anual para o ano {ano} porque ainda não terminou. '
-                                 f'Utilize um mês específico (até {mes_atual}) ou aguarde o final do ano.')
-        return redirect('dashboard')
+    # A validação do período (datas futuras, etc.) é feita em relatorio_pdf (_validar_periodo),
+    # porque essa view também é acedida diretamente por URL.
 
     return relatorio_pdf(request, ano, mes)
 
@@ -58,12 +77,16 @@ def relatorio_pdf_form(request):
 @login_required
 def relatorio_pdf(request, ano, mes=None):
     ano = int(ano)
+    erro = _validar_periodo(ano, mes)
+    if erro:
+        messages.error(request, erro)
+        return redirect('dashboard')
     if mes:
         mes = int(mes)
         MESES_PT = ['', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
             'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
         titulo = f"Relatório Mensal - {MESES_PT[mes]} de {ano}"
-        periodo = f"Período: {calendar.month_name[mes]} {ano}"
+        periodo = f"Período: {MESES_PT[mes]} {ano}"
     else:
         titulo = f"Relatório Anual - {ano}"
         periodo = f"Período: Ano {ano}"
@@ -105,7 +128,7 @@ def relatorio_pdf(request, ano, mes=None):
             GROUP BY p.nome_problematica
             ORDER BY total_ocorrencias DESC
         """, [data_inicio, data_fim])
-        problematicas = cursor.fetchall()
+        problematicas = _esc_rows(cursor.fetchall())
         problematica_labels = [p[0] for p in problematicas]
         problematica_data = [p[1] for p in problematicas]
 
@@ -115,7 +138,7 @@ def relatorio_pdf(request, ano, mes=None):
                 SELECT DISTINCT ON (hi.id_utente)
                     hi.id_utente,
                     hi.snapshot_json->'principal'->>'nome' AS nome,
-                    EXTRACT(YEAR FROM AGE(%s::date, u.data_nascimento))::int AS idade,
+                    EXTRACT(YEAR FROM AGE(%s, u.data_nascimento))::int AS idade,
                     hi.snapshot_json->'principal'->>'nivel_isolamento' AS nivel_isolamento,
                     (hi.snapshot_json->'principal'->>'vive_sozinho')::boolean AS vive_sozinho
                 FROM historico_idoso hi
@@ -128,7 +151,7 @@ def relatorio_pdf(request, ano, mes=None):
             FROM snapshots_mais_recentes
             WHERE nivel_isolamento = 'Elevado' AND vive_sozinho = true
         """, [data_fim, data_fim, data_fim])
-        idosos_isolados = cursor.fetchall()
+        idosos_isolados = _esc_rows(cursor.fetchall())
         total_isolados = len(idosos_isolados)
 
         # ----- Perfil etário - Socioeconómicos -----
@@ -136,7 +159,7 @@ def relatorio_pdf(request, ano, mes=None):
             WITH snapshots_mais_recentes AS (
                 SELECT DISTINCT ON (hus.id_utente)
                     hus.id_utente,
-                    EXTRACT(YEAR FROM AGE(%s::date, u.data_nascimento))::int AS idade
+                    EXTRACT(YEAR FROM AGE(%s, u.data_nascimento))::int AS idade
                 FROM historico_utente_socioeconomico hus
                 JOIN UTENTES u ON hus.id_utente = u.id_utente
                 WHERE hus.data_historico <= %s
@@ -145,6 +168,7 @@ def relatorio_pdf(request, ano, mes=None):
             )
             SELECT 
                 CASE 
+                    WHEN idade IS NULL THEN 'Desconhecida'
                     WHEN idade BETWEEN 0 AND 17 THEN '0-17'
                     WHEN idade BETWEEN 18 AND 24 THEN '18-24'
                     WHEN idade BETWEEN 25 AND 34 THEN '25-34'
@@ -158,7 +182,7 @@ def relatorio_pdf(request, ano, mes=None):
             GROUP BY faixa_etaria
             ORDER BY MIN(idade)
         """, [data_fim, data_fim, data_fim])
-        idades_socio = cursor.fetchall()
+        idades_socio = _esc_rows(cursor.fetchall())
         socio_labels = [i[0] for i in idades_socio]
         socio_data = [i[1] for i in idades_socio]
 
@@ -167,7 +191,7 @@ def relatorio_pdf(request, ano, mes=None):
             WITH snapshots_mais_recentes AS (
                 SELECT DISTINCT ON (hi.id_utente)
                     hi.id_utente,
-                    EXTRACT(YEAR FROM AGE(%s::date, u.data_nascimento))::int AS idade
+                    EXTRACT(YEAR FROM AGE(%s, u.data_nascimento))::int AS idade
                 FROM historico_idoso hi
                 JOIN UTENTES u ON hi.id_utente = u.id_utente
                 WHERE hi.data_historico <= %s
@@ -176,6 +200,8 @@ def relatorio_pdf(request, ano, mes=None):
             )
             SELECT 
                 CASE 
+                    WHEN idade IS NULL THEN 'Desconhecida'
+                    WHEN idade < 65 THEN '<65'
                     WHEN idade BETWEEN 65 AND 74 THEN '65-74'
                     WHEN idade BETWEEN 75 AND 84 THEN '75-84'
                     ELSE '85+'
@@ -185,7 +211,7 @@ def relatorio_pdf(request, ano, mes=None):
             GROUP BY faixa_etaria
             ORDER BY MIN(idade)
         """, [data_fim, data_fim, data_fim])
-        idades_idosos = cursor.fetchall()
+        idades_idosos = _esc_rows(cursor.fetchall())
         idosos_faixa_labels = [i[0] for i in idades_idosos]
         idosos_faixa_data = [i[1] for i in idades_idosos]
 
@@ -205,7 +231,7 @@ def relatorio_pdf(request, ano, mes=None):
             FROM snapshots_mais_recentes
             GROUP BY genero
         """, [data_fim, data_fim])
-        genero_socio = cursor.fetchall()
+        genero_socio = _esc_rows(cursor.fetchall())
         genero_socio_labels = [g[0] for g in genero_socio]
         genero_socio_data = [g[1] for g in genero_socio]
 
@@ -225,7 +251,7 @@ def relatorio_pdf(request, ano, mes=None):
             FROM snapshots_mais_recentes
             GROUP BY genero
         """, [data_fim, data_fim])
-        genero_idosos = cursor.fetchall()
+        genero_idosos = _esc_rows(cursor.fetchall())
         genero_idosos_labels = [g[0] for g in genero_idosos]
         genero_idosos_data = [g[1] for g in genero_idosos]
 
@@ -246,7 +272,7 @@ def relatorio_pdf(request, ano, mes=None):
             GROUP BY autonomia
             ORDER BY total DESC
         """, [data_fim, data_fim])
-        autonomia = cursor.fetchall()
+        autonomia = _esc_rows(cursor.fetchall())
         autonomia_labels = [a[0] for a in autonomia]
         autonomia_data = [a[1] for a in autonomia]
 
@@ -267,7 +293,7 @@ def relatorio_pdf(request, ano, mes=None):
             GROUP BY isolamento
             ORDER BY total DESC
         """, [data_fim, data_fim])
-        isolamento = cursor.fetchall()
+        isolamento = _esc_rows(cursor.fetchall())
         isolamento_labels = [i[0] for i in isolamento]
         isolamento_data = [i[1] for i in isolamento]
 
@@ -284,12 +310,14 @@ def relatorio_pdf(request, ano, mes=None):
                 ORDER BY hus.id_utente, hus.data_historico DESC
             )
             SELECT 
-                CASE WHEN risco_social THEN 'Em risco' ELSE 'Estavel' END AS situacao,
+                CASE WHEN risco_social IS TRUE THEN 'Em risco'
+                     WHEN risco_social IS FALSE THEN 'Estavel'
+                     ELSE 'Nao preenchido' END AS situacao,
                 COUNT(*) AS total
             FROM snapshots_mais_recentes
             GROUP BY risco_social
         """, [data_fim, data_fim])
-        risco = cursor.fetchall()
+        risco = _esc_rows(cursor.fetchall())
         risco_labels = [r[0] for r in risco]
         risco_data = [r[1] for r in risco]
 
@@ -348,7 +376,7 @@ def relatorio_pdf(request, ano, mes=None):
             GROUP BY zona
             ORDER BY zona
         """, [data_fim, data_fim])
-        zonas_utentes = cursor.fetchall()
+        zonas_utentes = _esc_rows(cursor.fetchall())
 
         # ----- Tipos de intervenção -----
         cursor.execute("""
@@ -359,7 +387,7 @@ def relatorio_pdf(request, ano, mes=None):
             GROUP BY ti.nome_tipo_intervencao
             ORDER BY total DESC
         """, [data_inicio, data_fim])
-        tipos_interv = cursor.fetchall()
+        tipos_interv = _esc_rows(cursor.fetchall())
         tipos_interv_labels = [t[0] for t in tipos_interv]
         tipos_interv_data = [t[1] for t in tipos_interv]
 
@@ -372,7 +400,7 @@ def relatorio_pdf(request, ano, mes=None):
             GROUP BY p.programa
             ORDER BY total DESC
         """, [data_inicio, data_fim])
-        programas = cursor.fetchall()
+        programas = _esc_rows(cursor.fetchall())
         programas_labels = [p[0] for p in programas]
         programas_data = [p[1] for p in programas]
 
@@ -393,7 +421,7 @@ def relatorio_pdf(request, ano, mes=None):
                 WHERE mes BETWEEN %s AND %s
                 ORDER BY mes
             """, [data_inicio, data_fim])
-        evolucao = cursor.fetchall()
+        evolucao = _esc_rows(cursor.fetchall())
         evolucao_labels = [row[0] for row in evolucao]
         evolucao_novos = [row[1] for row in evolucao]
         evolucao_ativos = [row[2] for row in evolucao]
@@ -401,22 +429,16 @@ def relatorio_pdf(request, ano, mes=None):
         # ----- Taxa de reincidência -----
         cursor.execute("""
             WITH 
-            primeiras_periodo AS (
-                SELECT DISTINCT id_utente, id_problematica, data_inicio AS primeira_data
+            casos_periodo AS (
+                SELECT DISTINCT id_utente, id_problematica
                 FROM ter t1
                 WHERE t1.data_inicio BETWEEN %s AND %s
-                  AND NOT EXISTS (
-                      SELECT 1 FROM ter t0
-                      WHERE t0.id_utente = t1.id_utente
-                        AND t0.id_problematica = t1.id_problematica
-                        AND t0.data_inicio < t1.data_inicio
-                  )
             ),
             reincidentes AS (
                 SELECT DISTINCT pp.id_utente, pp.id_problematica
-                FROM primeiras_periodo pp
+                FROM casos_periodo pp
                 JOIN ter t2 ON pp.id_utente = t2.id_utente AND pp.id_problematica = t2.id_problematica
-                WHERE t2.data_inicio > pp.primeira_data
+                WHERE t2.data_inicio BETWEEN %s AND %s
                   AND EXISTS (
                       SELECT 1 FROM ter t_res 
                       WHERE t_res.id_utente = pp.id_utente
@@ -426,7 +448,7 @@ def relatorio_pdf(request, ano, mes=None):
                   )
             ),
             total_casos_unicos AS (
-                SELECT COUNT(*) AS total FROM primeiras_periodo
+                SELECT COUNT(*) AS total FROM casos_periodo
             ),
             total_reincidentes AS (
                 SELECT COUNT(*) AS total FROM reincidentes
@@ -436,7 +458,7 @@ def relatorio_pdf(request, ano, mes=None):
                 (SELECT total FROM total_casos_unicos) AS total_casos_unicos,
                 ROUND(100.0 * (SELECT total FROM total_reincidentes) / 
                       NULLIF((SELECT total FROM total_casos_unicos), 0), 2) AS taxa_percentual
-        """, [data_inicio, data_fim])
+        """, [data_inicio, data_fim, data_inicio, data_fim])
         row_reinc = cursor.fetchone()
         reincidencia_total = {
             'casos_com_reincidencia': row_reinc[0] or 0,
@@ -453,7 +475,7 @@ def relatorio_pdf(request, ano, mes=None):
             GROUP BY tr.descricao_tipo_resposta
             ORDER BY total_ocorrencias DESC
         """, [data_inicio, data_fim])
-        respostas = cursor.fetchall()
+        respostas = _esc_rows(cursor.fetchall())
         respostas_labels = [r[0] for r in respostas]
         respostas_data = [r[1] for r in respostas]
 
@@ -468,11 +490,11 @@ def relatorio_pdf(request, ano, mes=None):
             JOIN utentes u ON ui.id_utente = u.id_utente
             JOIN zona_utente z ON u.id_zona_utente = z.id_zona_utente
             WHERE c.data_contacto BETWEEN %s AND %s
-            GROUP BY u.nome_utente, u.data_nascimento, z.descricao_zona_utente
-            ORDER BY num_contactos DESC
+            GROUP BY u.id_utente, u.nome_utente, u.data_nascimento, z.descricao_zona_utente
+            ORDER BY num_contactos DESC, u.nome_utente
             LIMIT 10
         """, [data_fim, data_inicio, data_fim])
-        mais_contactos = cursor.fetchall()
+        mais_contactos = _esc_rows(cursor.fetchall())
 
         # ----- Quedas repetidas no período (mínimo 2 quedas) -----
         cursor.execute("""
@@ -492,7 +514,7 @@ def relatorio_pdf(request, ano, mes=None):
             HAVING COUNT(q.ID_QUEDA) >= 2
             ORDER BY total_quedas DESC, ultima_queda DESC
         """, [data_fim, data_inicio, data_fim])
-        quedas_repetidas = cursor.fetchall()
+        quedas_repetidas = _esc_rows(cursor.fetchall())
 
         # ----- Falta de rede de suporte -----
         cursor.execute("""
@@ -500,7 +522,7 @@ def relatorio_pdf(request, ano, mes=None):
                 SELECT DISTINCT ON (hi.id_utente)
                     hi.id_utente,
                     hi.snapshot_json->'principal'->>'nome' AS nome,
-                    EXTRACT(YEAR FROM AGE(%s::date, u.data_nascimento))::int AS idade,
+                    EXTRACT(YEAR FROM AGE(%s, u.data_nascimento))::int AS idade,
                     hi.snapshot_json->'principal'->>'zona' AS zona,
                     (hi.snapshot_json->'principal'->>'vive_sozinho')::boolean AS vive_sozinho,
                     hi.snapshot_json->'principal'->>'contacto_emergencia' AS contacto_emergencia,
@@ -523,8 +545,8 @@ def relatorio_pdf(request, ano, mes=None):
             WHERE vive_sozinho = true
             AND (contacto_emergencia IS NULL OR contacto_emergencia = '')
             AND (familiar_referencia IS NULL OR familiar_referencia = '')
-        """, [data_fim, data_fim, data_fim])   # dois parâmetros: fim do período
-        falta_rede_suporte = cursor.fetchall()
+        """, [data_fim, data_fim, data_fim])   # idade, snapshot e data de criação: fim do período
+        falta_rede_suporte = _esc_rows(cursor.fetchall())
 
         # ----- Visitas prioritárias -----
         cursor.execute("""
@@ -533,7 +555,7 @@ def relatorio_pdf(request, ano, mes=None):
                 SELECT DISTINCT ON (hi.id_utente)
                     hi.id_utente,
                     hi.snapshot_json->'principal'->>'nome' AS nome,
-                    EXTRACT(YEAR FROM AGE(%s::date, u.data_nascimento))::int AS idade,
+                    EXTRACT(YEAR FROM AGE(%s, u.data_nascimento))::int AS idade,
                     hi.snapshot_json->'principal'->>'zona' AS zona,
                     hi.snapshot_json->'principal'->>'nivel_isolamento' AS nivel_isolamento,
                     (hi.snapshot_json->'principal'->>'vive_sozinho')::boolean AS vive_sozinho,
@@ -595,10 +617,10 @@ def relatorio_pdf(request, ano, mes=None):
             UNION
             SELECT * FROM prioridade3
             ORDER BY prioridade, idade DESC
-        """, [data_fim, data_fim, data_fim, data_inicio, data_fim])   # 1º par: snapshots, 2º par: quedas
-        visitas_prioritarias = cursor.fetchall()
+        """, [data_fim, data_fim, data_fim, data_inicio, data_fim])   # idade + 1º par: snapshots, 2º par: quedas
+        visitas_prioritarias = _esc_rows(cursor.fetchall())
 
-        # ----- Idosos sem contacto no período (apenas criados no período) -----
+        # ----- Idosos sem contacto no período (criados até ao fim do período) -----
         cursor.execute("""
             SELECT u.nome_utente, NULL AS ultimo_contacto
             FROM utentes u
@@ -611,7 +633,7 @@ def relatorio_pdf(request, ano, mes=None):
             )
             ORDER BY u.nome_utente
         """, [data_fim, data_inicio, data_fim])
-        idosos_sem_contacto = cursor.fetchall()
+        idosos_sem_contacto = _esc_rows(cursor.fetchall())
 
         # ----- Melhorias após participação -----
         cursor.execute("""
@@ -644,6 +666,11 @@ def relatorio_pdf(request, ano, mes=None):
                     i.isolamento_inicio,
                     f.isolamento_fim,
                     CASE 
+                        WHEN (i.grau_inicio = 'Autónomo' AND f.grau_fim IN ('Parcialmente dependente', 'Dependente'))
+                        OR (i.grau_inicio = 'Parcialmente dependente' AND f.grau_fim = 'Dependente')
+                        OR (i.isolamento_inicio = 'Nenhum' AND f.isolamento_fim IN ('Moderado', 'Elevado'))
+                        OR (i.isolamento_inicio = 'Moderado' AND f.isolamento_fim = 'Elevado')
+                        THEN 0   -- piorou numa das dimensões: não conta como melhoria
                         WHEN (i.grau_inicio = 'Dependente' AND f.grau_fim IN ('Parcialmente dependente', 'Autónomo'))
                         OR (i.grau_inicio = 'Parcialmente dependente' AND f.grau_fim = 'Autónomo')
                         OR (i.isolamento_inicio = 'Elevado' AND f.isolamento_fim IN ('Moderado', 'Nenhum'))
@@ -664,7 +691,7 @@ def relatorio_pdf(request, ano, mes=None):
             WHERE melhorou = 1
             ORDER BY nome_utente
         """, [data_fim, data_fim, data_fim, data_fim, data_inicio, data_fim])
-        melhorias = cursor.fetchall()
+        melhorias = _esc_rows(cursor.fetchall())
 
         # ----- Agravamento do grau de dependência (qualquer piora dentro do período) -----
         cursor.execute("""
@@ -673,7 +700,7 @@ def relatorio_pdf(request, ano, mes=None):
                     hi.id_utente,
                     hi.data_historico,
                     hi.snapshot_json->'principal'->>'nome' AS nome,
-                    EXTRACT(YEAR FROM AGE(%s::date, u.data_nascimento))::int AS idade,
+                    EXTRACT(YEAR FROM AGE(%s, u.data_nascimento))::int AS idade,
                     hi.snapshot_json->'principal'->>'grau_autonomia' AS grau,
                     hi.snapshot_json->'principal'->>'zona' AS zona,
                     CASE 
@@ -688,18 +715,22 @@ def relatorio_pdf(request, ano, mes=None):
                 ORDER BY hi.id_utente, hi.data_historico DESC
             ),
             agravamentos AS (
-                SELECT DISTINCT s1.id_utente, s1.nome, s1.idade, s1.zona,
-                    s1.grau AS grau_anterior,
-                    s2.grau AS grau_atual
-                FROM snapshots_periodo s1
-                JOIN snapshots_periodo s2 ON s1.id_utente = s2.id_utente AND s1.data_historico < s2.data_historico
-                WHERE s1.nivel < s2.nivel
+                SELECT DISTINCT c.id_utente, c.nome, c.idade, c.zona,
+                    c.grau_anterior,
+                    c.grau AS grau_atual
+                FROM (
+                    SELECT s.*,
+                        LAG(s.grau)  OVER (PARTITION BY s.id_utente ORDER BY s.data_historico) AS grau_anterior,
+                        LAG(s.nivel) OVER (PARTITION BY s.id_utente ORDER BY s.data_historico) AS nivel_anterior
+                    FROM snapshots_periodo s
+                ) c
+                WHERE c.data_historico >= %s AND c.nivel_anterior > 0 AND c.nivel_anterior < c.nivel
             )
             SELECT nome, idade, zona, grau_anterior, grau_atual
             FROM agravamentos
             ORDER BY nome
-        """, [data_fim, data_fim, data_fim])
-        agravamentos = cursor.fetchall()
+        """, [data_fim, data_fim, data_fim, data_inicio])
+        agravamentos = _esc_rows(cursor.fetchall())
     # =========================================================
     # --- Construção do PDF ---
     # =========================================================
@@ -785,7 +816,7 @@ def relatorio_pdf(request, ano, mes=None):
     # ---- Taxa de Reincidência ----
     story.append(Paragraph("Taxa de Reincidência (problemáticas surgidas no periodo)", subtitulo_estilo))
     story.append(Paragraph(f"<b>Casos com reincidência:</b> {reincidencia_total['casos_com_reincidencia']}", normal_estilo))
-    story.append(Paragraph(f"<b>Total de casos únicos (primeira ocorrencia no periodo):</b> {reincidencia_total['total_casos_unicos']}", normal_estilo))
+    story.append(Paragraph(f"<b>Total de casos únicos (problematicas surgidas no periodo):</b> {reincidencia_total['total_casos_unicos']}", normal_estilo))
     story.append(Paragraph(f"<b>Taxa de reincidência:</b> {reincidencia_total['taxa_percentual']}%", normal_estilo))
     story.append(Spacer(1, 0.5*cm))
 

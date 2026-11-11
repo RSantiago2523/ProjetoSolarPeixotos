@@ -60,6 +60,7 @@ SELECT
 CREATE OR REPLACE VIEW vw_idades_socioeconomicos AS
 SELECT 
     CASE 
+        WHEN data_nascimento IS NULL THEN 'Desconhecida'
         WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento)) BETWEEN 0 AND 17 THEN '0-17'
         WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento)) BETWEEN 18 AND 24 THEN '18-24'
         WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento)) BETWEEN 25 AND 34 THEN '25-34'
@@ -78,6 +79,8 @@ ORDER BY MIN(EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento)));
 CREATE OR REPLACE VIEW vw_idades_idosos AS
 SELECT 
     CASE 
+        WHEN data_nascimento IS NULL THEN 'Desconhecida'
+        WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento)) < 65 THEN '<65'
         WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento)) BETWEEN 65 AND 74 THEN '65-74'
         WHEN EXTRACT(YEAR FROM AGE(CURRENT_DATE, data_nascimento)) BETWEEN 75 AND 84 THEN '75-84'
         ELSE '85+'
@@ -215,7 +218,7 @@ WHERE ui.VIVE_SOZINHO = true
 
 
 CREATE OR REPLACE VIEW vw_zona_utentes AS
-SELECT z.descricao_zona_utente, COUNT(u.id_utente) as total,
+SELECT z.descricao_zona_utente, COUNT(usec.id_utente) as total,
        COUNT(CASE WHEN usec.risco_social THEN 1 END) as risco
 FROM utentes u
 LEFT JOIN zona_utente z ON u.id_zona_utente = z.id_zona_utente
@@ -359,7 +362,9 @@ WITH ultimo_historico AS (
         hi.id_utente,
         hi.snapshot_json->'principal'->>'grau_autonomia' AS grau_anterior
     FROM historico_idoso hi
-    WHERE hi.data_historico < (SELECT MAX(data_historico) FROM historico_idoso WHERE id_utente = hi.id_utente)
+    JOIN UTENTES_IDOSOS uig ON uig.ID_UTENTE = hi.id_utente
+    JOIN GRAU_AUTONOMIA gag ON gag.ID_GRAU_AUTONOMIA = uig.ID_GRAU_AUTONOMIA
+    WHERE hi.snapshot_json->'principal'->>'grau_autonomia' <> gag.NOME_GRAU_AUTONOMIA   -- último estado com grau diferente do atual
     ORDER BY hi.id_utente, hi.data_historico DESC
 ),
 atuais AS (
@@ -449,6 +454,12 @@ SELECT
     p.isolamento_inicial,
     uf.isolamento_final,
     CASE 
+        -- Piorou na autonomia ou no isolamento: não conta como melhoria
+        WHEN (p.grau_inicial = 'Autónomo' AND uf.grau_final IN ('Parcialmente dependente', 'Dependente'))
+          OR (p.grau_inicial = 'Parcialmente dependente' AND uf.grau_final = 'Dependente')
+          OR (p.isolamento_inicial = 'Nenhum' AND uf.isolamento_final IN ('Moderado', 'Elevado'))
+          OR (p.isolamento_inicial = 'Moderado' AND uf.isolamento_final = 'Elevado')
+        THEN 0
         -- Melhoria na autonomia
         WHEN (p.grau_inicial = 'Dependente' AND uf.grau_final IN ('Parcialmente dependente', 'Autónomo'))
           OR (p.grau_inicial = 'Parcialmente dependente' AND uf.grau_final = 'Autónomo')

@@ -11,7 +11,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 
     <style>
         body { background: #f5f7fb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -75,17 +75,26 @@
         </div>
     </div>
 
+    <!-- Mensagens flash (ex.: erros ao gerar o relatório) -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}" role="alert">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="row mt-3 mb-4">
     <div class="col-md-6 mx-auto">
         <div class="card card-custom p-3">
             <form method="GET" action="{% url 'relatorio_pdf_form' %}" class="row g-2 align-items-center justify-content-center">
                 <div class="col-auto">
                     <label for="ano" class="visually-hidden">Ano</label>
-                    <input type="number" name="ano" id="ano" class="form-control" placeholder="Ano" required min="1930" step="1" value="{% now 'Y' %}">
+                    <input type="number" name="ano" id="ano" class="form-control" placeholder="Ano" required min="2000" max="{% now 'Y' %}" step="1" value="{% now 'Y' %}">
                 </div>
                 <div class="col-auto">
                     <label for="mes" class="visually-hidden">Mês (opcional)</label>
-                    <input type="number" name="mes" id="mes" class="form-control" placeholder="Mês (1-12)" min="1" max="12">
+                    <input type="number" name="mes" id="mes" class="form-control" placeholder="Mês (1-12)" min="1" max="12" value="{% now 'n' %}">
                 </div>
                 <div class="col-auto">
                     <button type="submit" class="btn btn-success">
@@ -187,7 +196,7 @@
             <div class="col-md-6">
                 <div class="card card-custom">
                     <div class="card-body p-4">
-                        <h5 class="card-title">Problemáticas Mais Frequentes</h5>
+                        <h5 class="card-title">Problemáticas Mais Frequentes (casos ativos)</h5>
                         <canvas id="graficoProblematicas" width="400" height="300"></canvas>
                     </div>
                 </div>
@@ -294,6 +303,7 @@
                                 <th>Total Utentes</th>
                                 <th>Utentes Reincidentes</th>
                                 <th>Taxa de Reincidência</th>
+                            </tr>
                              </thead>
                         <tbody>
                             {% for r in reincidencia %}
@@ -329,6 +339,7 @@
                                 <th>Idade</th>
                                 <th>Nível Isolamento</th>
                                 <th>Vive Sozinho</th>
+                            </tr>
                              </thead>
                         <tbody>
                             {% for idoso in idosos_isolados %}
@@ -339,7 +350,7 @@
                                 <td>{% if idoso.3 %}Sim{% else %}Não{% endif %}</td>
                              </tr>
                             {% empty %}
-                            <td><td colspan="4" class="text-center">Nenhum idoso nesta situação.</td></tr>
+                            <tr><td colspan="4" class="text-center">Nenhum idoso nesta situação.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -397,7 +408,7 @@
                         <thead class="table-light"><tr><th>Nome</th><th>Idade</th><th>Zona</th><th>Total quedas</th><th>Última queda</th></tr></thead>
                         <tbody>
                             {% for q in quedas_repetidas %}
-                            <tr><td>{{ q.1 }}</td><td>{{ q.2 }}</td><td>{{ q.3 }}</td><td>{{ q.4 }}</td><td>{{ q.5|date:"d/m/Y" }}</td></tr>
+                            <tr><td>{{ q.1 }}</td><td>{{ q.2|default_if_none:"-" }}</td><td>{{ q.3 }}</td><td>{{ q.4 }}</td><td>{{ q.5|date:"d/m/Y" }}</td></tr>
                             {% empty %}<tr><td colspan="5">Nenhum idoso com quedas repetidas.</td></tr>{% endfor %}
                         </tbody>
                     </table>
@@ -414,7 +425,7 @@
                         <thead class="table-light"><tr><th>Nome</th><th>Idade</th><th>Zona</th></tr></thead>
                         <tbody>
                             {% for f in falta_rede_suporte %}
-                            <tr><td>{{ f.1 }}</td><td>{{ f.2 }}</td><td>{{ f.3 }}</td></tr>
+                            <tr><td>{{ f.1 }}</td><td>{{ f.2|default_if_none:"-" }}</td><td>{{ f.3 }}</td></tr>
                             {% empty %}<tr><td colspan="3">Nenhum idoso nesta situação.</td></tr>{% endfor %}
                         </tbody>
                     </table>
@@ -432,7 +443,7 @@
                         <tbody>
                             {% for v in visitas_prioritarias %}
                             <tr>
-                                <td>{{ v.1 }}</td><td>{{ v.2 }}</td><td>{{ v.3 }}</td>
+                                <td>{{ v.1 }}</td><td>{{ v.2|default_if_none:"-" }}</td><td>{{ v.3 }}</td>
                                 <td>{{ v.4 }}</td><td>{% if v.5 == 1 %}⚠️ Alta{% elif v.5 == 2 %}🔶 Média{% else %}🔵 Baixa{% endif %}</td>
                             </tr>
                             {% empty %}<tr><td colspan="5">Nenhuma situação prioritária.</td></tr>{% endfor %}
@@ -451,8 +462,9 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Zona</th>
-                                <th>Total de utentes</th>
+                                <th>Total de utentes socioeconómicos</th>
                                 <th>Com risco social</th>
+                            </tr>
                             </thead>
                         <tbody>
                             {% for zona in zonas_utentes %}
@@ -483,12 +495,13 @@
                                 <th>Zona</th>
                                 <th>Grau atual</th>
                                 <th>Grau anterior</th>
+                            </tr>
                             </thead>
                         <tbody>
                             {% for a in agravamentos %}
                             <tr>
                                 <td>{{ a.0 }}</td>
-                                <td>{{ a.1 }} anos</td>
+                                <td>{% if a.1 is not None %}{{ a.1 }} anos{% else %}-{% endif %}</td>
                                 <td>{{ a.2 }} </td>
                                 <td>{{ a.3 }} </td>
                                 <td>{{ a.4|default:"-" }} </td>
@@ -516,13 +529,14 @@
                                 <th>Nº de contactos</th>
                                 <th>Idade</th>
                                 <th>Zona</th>
+                            </tr>
                             </thead>
                         <tbody>
                             {% for c in mais_contactos %}
                             <tr>
                                 <td>{{ c.0 }} </td>
                                 <td>{{ c.1 }} </td>
-                                <td>{{ c.2 }} anos</td>
+                                <td>{% if c.2 is not None %}{{ c.2 }} anos{% else %}-{% endif %}</td>
                                 <td>{{ c.3 }} </td>
                             </tr>
                             {% empty %}
@@ -550,6 +564,7 @@
                                 <th>Isolamento inicial</th>
                                 <th>Isolamento atual</th>
                                 <th>Melhorou?</th>
+                            </tr>
                             </thead>
                         <tbody>
                             {% for m in melhorias %}
@@ -568,7 +583,7 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            <td>
+                            <tr>
                                 <td colspan="6" class="text-center">Sem dados de melhoria (necessita de histórico).</td>
                             </tr>
                             {% endfor %}
@@ -624,6 +639,8 @@
                 return [];
             }
         }
+
+        const PALETA = ['#ff6384','#36a2eb','#ffce56','#4bc0c0','#9966ff','#ff9f40','#c9cbcf','#8e44ad','#2ecc71','#e74c3c','#1abc9c','#f39c12'];
 
         // Carregar todos os dados
         const intervencoes_labels = safeParse('intervencoes-labels');
@@ -684,7 +701,7 @@
                 options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
             });
         } else {
-            document.getElementById('graficoEvolucaoProblematicas').parentElement.innerHTML = '<div class="alert alert-info">Sem dados suficientes para evolução de problemáticas.</div>';
+            document.getElementById('graficoEvolucaoProblematicas').outerHTML = '<div class="alert alert-info">Sem dados suficientes para evolução de problemáticas.</div>';
         }
 
         // Gráfico de respostas mais utilizadas
@@ -693,24 +710,24 @@
                 type: 'pie',
                 data: {
                     labels: respostas_labels,
-                    datasets: [{ data: respostas_data, backgroundColor: ['#ff6384','#36a2eb','#ffce56','#4bc0c0','#9966ff'] }]
+                    datasets: [{ data: respostas_data, backgroundColor: PALETA }]
                 }
             });
         } else {
-            document.getElementById('graficoRespostas').parentElement.innerHTML = '<div class="alert alert-info">Sem dados de encaminhamentos.</div>';
+            document.getElementById('graficoRespostas').outerHTML = '<div class="alert alert-info">Sem dados de encaminhamentos.</div>';
         }
 
         // Gráficos de pizza/barra
-        new Chart(document.getElementById('graficoProblematicas'), { type: 'pie', data: { labels: problematica_labels, datasets: [{ data: problematica_data, backgroundColor: ['#ff6384','#36a2eb','#ffce56','#4bc0c0','#9966ff','#ff9f40'] }] } });
-        new Chart(document.getElementById('graficoTiposIntervencao'), { type: 'pie', data: { labels: tipos_interv_labels, datasets: [{ data: tipos_interv_data, backgroundColor: ['#ff6384','#36a2eb','#ffce56','#4bc0c0','#9966ff','#ff9f40'] }] } });
-        new Chart(document.getElementById('graficoProgramas'), { type: 'pie', data: { labels: programas_labels, datasets: [{ data: programas_data, backgroundColor: ['#ff6384','#36a2eb','#ffce56','#4bc0c0','#9966ff','#ff9f40'] }] } });
-        new Chart(document.getElementById('graficoRiscoSocial'), { type: 'pie', data: { labels: risco_labels, datasets: [{ data: risco_data, backgroundColor: ['#ff6384','#36a2eb'] }] } });
+        new Chart(document.getElementById('graficoProblematicas'), { type: 'pie', data: { labels: problematica_labels, datasets: [{ data: problematica_data, backgroundColor: PALETA }] } });
+        new Chart(document.getElementById('graficoTiposIntervencao'), { type: 'pie', data: { labels: tipos_interv_labels, datasets: [{ data: tipos_interv_data, backgroundColor: PALETA }] } });
+        new Chart(document.getElementById('graficoProgramas'), { type: 'pie', data: { labels: programas_labels, datasets: [{ data: programas_data, backgroundColor: PALETA }] } });
+        new Chart(document.getElementById('graficoRiscoSocial'), { type: 'pie', data: { labels: risco_labels, datasets: [{ data: risco_data, backgroundColor: PALETA }] } });
         new Chart(document.getElementById('graficoIdadesSocio'), { type: 'bar', data: { labels: socio_labels, datasets: [{ label: 'Nº de utentes', data: socio_data, backgroundColor: '#36a2eb' }] }, options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } });
         new Chart(document.getElementById('graficoIdadesIdosos'), { type: 'bar', data: { labels: idosos_faixa_labels, datasets: [{ label: 'Nº de idosos', data: idosos_faixa_data, backgroundColor: '#ff9f40' }] }, options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } });
-        new Chart(document.getElementById('graficoGeneroSocio'), { type: 'pie', data: { labels: genero_socio_labels, datasets: [{ data: genero_socio_data, backgroundColor: ['#ff6384','#36a2eb'] }] } });
-        new Chart(document.getElementById('graficoGeneroIdosos'), { type: 'pie', data: { labels: genero_idosos_labels, datasets: [{ data: genero_idosos_data, backgroundColor: ['#ff6384','#36a2eb'] }] } });
-        new Chart(document.getElementById('graficoAutonomia'), { type: 'pie', data: { labels: autonomia_labels, datasets: [{ data: autonomia_data, backgroundColor: ['#ff6384','#36a2eb','#ffce56'] }] } });
-        new Chart(document.getElementById('graficoIsolamento'), { type: 'pie', data: { labels: isolamento_labels, datasets: [{ data: isolamento_data, backgroundColor: ['#ff6384','#36a2eb','#ffce56'] }] } });
+        new Chart(document.getElementById('graficoGeneroSocio'), { type: 'pie', data: { labels: genero_socio_labels, datasets: [{ data: genero_socio_data, backgroundColor: PALETA }] } });
+        new Chart(document.getElementById('graficoGeneroIdosos'), { type: 'pie', data: { labels: genero_idosos_labels, datasets: [{ data: genero_idosos_data, backgroundColor: PALETA }] } });
+        new Chart(document.getElementById('graficoAutonomia'), { type: 'pie', data: { labels: autonomia_labels, datasets: [{ data: autonomia_data, backgroundColor: PALETA }] } });
+        new Chart(document.getElementById('graficoIsolamento'), { type: 'pie', data: { labels: isolamento_labels, datasets: [{ data: isolamento_data, backgroundColor: PALETA }] } });
     </script>
 </body>
 </html>
