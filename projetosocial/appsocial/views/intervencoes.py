@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 from django.db import connection, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -316,6 +317,7 @@ def editar_intervencao(request, id):
     return redirect('intervencoes_lista')
 
 @login_required
+@require_POST
 def eliminar_intervencao(request, id):
     # Verificar se a intervenção existe
     with connection.cursor() as cursor:

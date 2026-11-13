@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 from django.db import connection, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -369,7 +370,7 @@ def socioeconomicos_novo(request):
                             [socio.id_utente_id, pid, data_atual, None]
                         )
 
-            guardar_historico_utente(request, utente.id_utente)
+                guardar_historico_utente(request, utente.id_utente)
 
             messages.success(request, f'Utente {nome} criado com sucesso!')
             return redirect('socioeconomicos_lista')
@@ -646,6 +647,7 @@ def socioeconomicos_editar(request, id_utente):
     return redirect('socioeconomicos_lista')
 
 @login_required
+@require_POST
 def socioeconomicos_eliminar(request, id_utente):
     with connection.cursor() as cursor:
         cursor.execute("SELECT ID_UTENTE, NOME_UTENTE FROM UTENTES WHERE ID_UTENTE = %s", [id_utente])

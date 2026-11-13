@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 from django.db import connection, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -316,6 +317,10 @@ def idosos_novo(request):
                         nova = models.SinaisFragilidade.objects.create(descricao_fragilidade=nova_fragilidade)
                         fragilidades_ids.append(str(nova.id_sinal_fragilidade))
 
+                doencas_ids = list(dict.fromkeys(doencas_ids))
+                barreiras_ids = list(dict.fromkeys(barreiras_ids))
+                fragilidades_ids = list(dict.fromkeys(fragilidades_ids))
+
                 # 3.1 Criar Utentes (tipo_utente = 2 para idoso)
                 utente = models.Utentes.objects.create(
                     id_tipo_utente_id=2,
@@ -397,7 +402,7 @@ def idosos_novo(request):
                             observacoes_queda=obs
                         )
 
-            guardar_historico_idoso(request, utente.id_utente)
+                guardar_historico_idoso(request, utente.id_utente)
 
             messages.success(request, f'Idoso {nome} criado com sucesso!')
             return redirect('idosos_detalhe', id_utente=utente.id_utente)
@@ -675,6 +680,7 @@ def idosos_editar(request, id_utente):
     return redirect('idosos_lista')
 
 @login_required
+@require_POST
 def idosos_eliminar(request, id_utente):
     # Verificar se o idoso existe
     with connection.cursor() as cursor:

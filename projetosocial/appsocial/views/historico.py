@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 import json
 from django.db import connection
 from django.contrib.auth.decorators import login_required
@@ -268,6 +269,7 @@ def historico_utente_detalhe(request, id_utente, id_historico):
     })
 
 @login_required
+@require_POST
 def historico_utente_limpar_tudo(request, id_utente):
     with connection.cursor() as cursor:
         cursor.execute("DELETE FROM historico_utente_socioeconomico WHERE id_utente = %s", [id_utente])
@@ -537,6 +539,7 @@ def historico_idoso_detalhe(request, id_utente, id_historico):
 
 
 @login_required
+@require_POST
 def historico_idoso_limpar_tudo(request, id_utente):
     with connection.cursor() as cursor:
         cursor.execute("DELETE FROM historico_idoso WHERE id_utente = %s", [id_utente])

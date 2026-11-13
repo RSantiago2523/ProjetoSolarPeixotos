@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 from django.db import connection, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -229,6 +230,7 @@ def contactos_editar(request, id):
     return redirect('contactos_lista')
 
 @login_required
+@require_POST
 def contactos_eliminar(request, id):
     # Verificar se o contacto existe
     with connection.cursor() as cursor:

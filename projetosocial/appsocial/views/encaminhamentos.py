@@ -1,3 +1,4 @@
+from django.views.decorators.http import require_POST
 from django.db import connection, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -133,6 +134,12 @@ def encaminhamentos_novo(request):
             errors.append('A descrição do encaminhamento é obrigatória.')
         if not id_tipo_resposta:
             errors.append('O tipo de resposta do encaminhamento é obrigatório')
+        if tempo_resposta:
+            try:
+                if int(tempo_resposta) < 0:
+                    errors.append('O tempo de resposta não pode ser negativo.')
+            except (TypeError, ValueError):
+                errors.append('O tempo de resposta tem de ser um número inteiro.')
 
         if errors:
             for err in errors:
@@ -219,6 +226,12 @@ def encaminhamentos_editar(request, id):
             errors.append('A descrição do encaminhamento é obrigatória.')
         if not id_tipo_resposta:
             errors.append('O tipo de resposta do encaminhamento é obrigatório')
+        if tempo_resposta:
+            try:
+                if int(tempo_resposta) < 0:
+                    errors.append('O tempo de resposta não pode ser negativo.')
+            except (TypeError, ValueError):
+                errors.append('O tempo de resposta tem de ser um número inteiro.')
 
         if errors:
             for err in errors:
@@ -247,6 +260,7 @@ def encaminhamentos_editar(request, id):
     return redirect('encaminhamentos_lista')
 
 @login_required
+@require_POST
 def encaminhamentos_eliminar(request, id):
     # Verificar se o encaminhamento existe
     with connection.cursor() as cursor:

@@ -11,6 +11,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from io import BytesIO
+from xml.sax.saxutils import escape
 from django.http import HttpResponse
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
@@ -123,7 +124,7 @@ def socioeconomicos_pdf(request, id_utente):
 
     # Cabeçalho
     story.append(Paragraph("Ficha do Utente Socioeconómico", titulo_estilo))
-    story.append(Paragraph(f"<b>Nome:</b> {utente[1]}", normal_estilo))
+    story.append(Paragraph(f"<b>Nome:</b> {escape(str(utente[1] or '-'))}", normal_estilo))
     story.append(Paragraph(f"<b>Código:</b> #{utente[0]}", normal_estilo))
     story.append(Spacer(1, 0.5*cm))
 
@@ -148,20 +149,20 @@ def socioeconomicos_pdf(request, id_utente):
 
     # 2. Situação Social
     story.append(Paragraph("Situação Social", subtitulo_estilo))
-    story.append(Paragraph(f"<b>Situação Habitacional:</b> {utente[5] or '-'}", normal_estilo))
+    story.append(Paragraph(f"<b>Situação Habitacional:</b> {escape(str(utente[5] or '-'))}", normal_estilo))
     story.append(Spacer(1, 0.3*cm))
 
     # 3. Situação Económica
     story.append(Paragraph("Situação Económica", subtitulo_estilo))
-    story.append(Paragraph(f"<b>Situação Laboral:</b> {utente[6] or '-'}", normal_estilo))
-    story.append(Paragraph(f"<b>Tipo de Rendimento:</b> {utente[7] or '-'}", normal_estilo))
+    story.append(Paragraph(f"<b>Situação Laboral:</b> {escape(str(utente[6] or '-'))}", normal_estilo))
+    story.append(Paragraph(f"<b>Tipo de Rendimento:</b> {escape(str(utente[7] or '-'))}", normal_estilo))
     story.append(Paragraph(f"<b>Risco Social:</b> {'Em risco' if utente[9] else 'Estável'}", normal_estilo))
     story.append(Spacer(1, 0.2*cm))
 
     if escaloes:
         story.append(Paragraph("<b>Escalões de Rendimento:</b>", normal_estilo))
         for e in escaloes:
-            story.append(Paragraph(f"• {e[0]}: {e[1]} €", normal_estilo))
+            story.append(Paragraph(f"• {escape(str(e[0] or '-'))}: {e[1]} €", normal_estilo))
     else:
         story.append(Paragraph("Nenhum escalão registado.", normal_estilo))
     story.append(Spacer(1, 0.2*cm))
@@ -169,7 +170,7 @@ def socioeconomicos_pdf(request, id_utente):
     if despesas:
         story.append(Paragraph("<b>Despesas Fixas:</b>", normal_estilo))
         for d in despesas:
-            story.append(Paragraph(f"• {d[0]}: {d[1]} €", normal_estilo))
+            story.append(Paragraph(f"• {escape(str(d[0] or '-'))}: {d[1]} €", normal_estilo))
     else:
         story.append(Paragraph("Nenhuma despesa fixa registada.", normal_estilo))
     story.append(Spacer(1, 0.5*cm))
@@ -191,11 +192,11 @@ def socioeconomicos_pdf(request, id_utente):
             if len(obs) > 200:
                 obs = obs[:197] + "..."
             row = [
-                Paragraph(i[1] or "-", celula_estilo),
-                Paragraph(i[2] or "-", celula_estilo),
+                Paragraph(escape(str(i[1] or "-")), celula_estilo),
+                Paragraph(escape(str(i[2] or "-")), celula_estilo),
                 Paragraph(i[3] or "-", celula_estilo),
                 Paragraph(i[4].strftime("%d/%m/%Y %H:%M") if i[4] else "-", celula_estilo),
-                Paragraph(obs, celula_estilo)
+                Paragraph(escape(str(obs or '-')), celula_estilo)
             ]
             table_data.append(row)
         # Larguras ajustáveis: a última coluna (Observações) é mais larga
@@ -223,7 +224,7 @@ def socioeconomicos_pdf(request, id_utente):
         ]]
         for p in problematicas:
             row = [
-                Paragraph(p[0] or "-", celula_estilo),
+                Paragraph(escape(str(p[0] or "-")), celula_estilo),
                 Paragraph(p[1].strftime("%d/%m/%Y") if p[1] else "-", celula_estilo),
                 Paragraph(p[2].strftime("%d/%m/%Y") if p[2] else "-", celula_estilo),
                 Paragraph(p[3], celula_estilo)
@@ -250,9 +251,9 @@ def socioeconomicos_pdf(request, id_utente):
         ]]
         for m in membros_agregado:
             row = [
-                Paragraph(m[0] or "-", celula_estilo),
+                Paragraph(escape(str(m[0] or "-")), celula_estilo),
                 Paragraph(str(m[1]) if m[1] else "-", celula_estilo),
-                Paragraph(m[2] or "-", celula_estilo)
+                Paragraph(escape(str(m[2] or "-")), celula_estilo)
             ]
             table_data.append(row)
         t_agreg = Table(table_data, colWidths=[6*cm, 4*cm, 4*cm], repeatRows=1)
@@ -268,10 +269,10 @@ def socioeconomicos_pdf(request, id_utente):
 
     # 7. Observações
     story.append(Paragraph("Observações", subtitulo_estilo))
-    story.append(Paragraph(utente[10] or "Sem observações.", normal_estilo))
+    story.append(Paragraph(escape(str(utente[10] or "Sem observações.")), normal_estilo))
     story.append(Spacer(1, 0.3*cm))
     story.append(Paragraph("Critério de Risco", subtitulo_estilo))
-    story.append(Paragraph(utente[11] or "-", normal_estilo))
+    story.append(Paragraph(escape(str(utente[11] or "-")), normal_estilo))
 
     # Rodapé
     story.append(Spacer(1, 1*cm))
@@ -409,7 +410,7 @@ def idosos_pdf(request, id_utente):
 
     # Título e identificação
     story.append(Paragraph("Ficha do Utente Idoso", titulo_estilo))
-    story.append(Paragraph(f"<b>Nome:</b> {utente[1]}", normal_estilo))
+    story.append(Paragraph(f"<b>Nome:</b> {escape(str(utente[1] or '-'))}", normal_estilo))
     story.append(Paragraph(f"<b>Código:</b> #{utente[0]}", normal_estilo))
     story.append(Spacer(1, 0.5*cm))
 
@@ -444,7 +445,7 @@ def idosos_pdf(request, id_utente):
         ("Acompanhamento Centro Saúde:", "Sim" if utente[17] else "Não"),
     ]
     for label, value in saude_data:
-        story.append(Paragraph(f"<b>{label}</b> {value}", normal_estilo))
+        story.append(Paragraph(f"<b>{escape(str(label))}</b> {escape(str(value or '-'))}", normal_estilo))
     story.append(Spacer(1, 0.3*cm))
 
     # 3. Bem‑estar e Social (com hífen corrigido)
@@ -458,7 +459,7 @@ def idosos_pdf(request, id_utente):
         ("Luto Recente:", "Sim" if utente[20] else "Não"),
     ]
     for label, value in social_data:
-        story.append(Paragraph(f"<b>{label}</b> {value}", normal_estilo))
+        story.append(Paragraph(f"<b>{escape(str(label))}</b> {escape(str(value or '-'))}", normal_estilo))
     story.append(Spacer(1, 0.3*cm))
 
     # 4. Habitação e Segurança
@@ -470,14 +471,14 @@ def idosos_pdf(request, id_utente):
         ("Necessidade de Adaptações:", utente[23] or "-"),
     ]
     for label, value in hab_data:
-        story.append(Paragraph(f"<b>{label}</b> {value}", normal_estilo))
+        story.append(Paragraph(f"<b>{escape(str(label))}</b> {escape(str(value or '-'))}", normal_estilo))
     story.append(Spacer(1, 0.5*cm))
 
     # 5. Atividades da Vida Diária (AVD)
     story.append(Paragraph("Atividades da Vida Diária (AVD)", subtitulo_estilo))
     if atividades:
         for a in atividades:
-            story.append(Paragraph(f"• {a[0]}", normal_estilo))
+            story.append(Paragraph(f"• {escape(str(a[0] or '-'))}", normal_estilo))
     else:
         story.append(Paragraph("Nenhuma atividade registada.", normal_estilo))
     story.append(Spacer(1, 0.5*cm))
@@ -486,7 +487,7 @@ def idosos_pdf(request, id_utente):
     story.append(Paragraph("Doenças Crónicas", subtitulo_estilo))
     if doencas:
         for d in doencas:
-            story.append(Paragraph(f"• {d[0]}", normal_estilo))
+            story.append(Paragraph(f"• {escape(str(d[0] or '-'))}", normal_estilo))
     else:
         story.append(Paragraph("Nenhuma doença crónica registada.", normal_estilo))
     story.append(Spacer(1, 0.5*cm))
@@ -495,7 +496,7 @@ def idosos_pdf(request, id_utente):
     story.append(Paragraph("Barreiras Arquitetónicas", subtitulo_estilo))
     if barreiras:
         for b in barreiras:
-            story.append(Paragraph(f"• {b[0]}", normal_estilo))
+            story.append(Paragraph(f"• {escape(str(b[0] or '-'))}", normal_estilo))
     else:
         story.append(Paragraph("Nenhuma barreira arquitetónica registada.", normal_estilo))
     story.append(Spacer(1, 0.5*cm))
@@ -504,7 +505,7 @@ def idosos_pdf(request, id_utente):
     story.append(Paragraph("Sinais de Fragilidade", subtitulo_estilo))
     if fragilidades:
         for f in fragilidades:
-            story.append(Paragraph(f"• {f[0]}", normal_estilo))
+            story.append(Paragraph(f"• {escape(str(f[0] or '-'))}", normal_estilo))
     else:
         story.append(Paragraph("Nenhum sinal de fragilidade registado.", normal_estilo))
     story.append(Spacer(1, 0.5*cm))
@@ -524,9 +525,9 @@ def idosos_pdf(request, id_utente):
                 obs = obs[:97] + "..."
             row = [
                 Paragraph(c[1].strftime("%d/%m/%Y %H:%M") if c[1] else "-", celula_estilo),
-                Paragraph(c[2] or "-", celula_estilo),
+                Paragraph(escape(str(c[2] or "-")), celula_estilo),
                 Paragraph(c[3] or "-", celula_estilo),
-                Paragraph(obs, celula_estilo)
+                Paragraph(escape(str(obs or '-')), celula_estilo)
             ]
             table_data.append(row)
         col_widths = [2.8*cm, 2.8*cm, 2.8*cm, 7*cm]
@@ -552,7 +553,7 @@ def idosos_pdf(request, id_utente):
         for q in quedas:
             row = [
                 Paragraph(q[0].strftime("%d/%m/%Y") if q[0] else "-", celula_estilo),
-                Paragraph(q[1] or "-", celula_estilo)
+                Paragraph(escape(str(q[1] or "-")), celula_estilo)
             ]
             table_data.append(row)
         t_quedas = Table(table_data, colWidths=[3*cm, 12*cm], repeatRows=1)
@@ -571,5 +572,3 @@ def idosos_pdf(request, id_utente):
 
     doc.build(story)
     return response
-
-
