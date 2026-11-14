@@ -590,6 +590,11 @@ def idosos_editar(request, id_utente):
                         nova = models.SinaisFragilidade.objects.create(descricao_fragilidade=nova_fragilidade)
                         fragilidades_ids.append(str(nova.id_sinal_fragilidade))
 
+                # Remover IDs duplicados para evitar erros de chave primária
+                doencas_ids = list(dict.fromkeys(doencas_ids))
+                barreiras_ids = list(dict.fromkeys(barreiras_ids))
+                fragilidades_ids = list(dict.fromkeys(fragilidades_ids))
+
                 # 1. Atualizar Utentes
                 utente.nome_utente = nome
                 utente.data_nascimento = data_nascimento
