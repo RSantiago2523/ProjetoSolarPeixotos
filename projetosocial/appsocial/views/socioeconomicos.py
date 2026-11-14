@@ -636,7 +636,7 @@ def socioeconomicos_editar(request, id_utente):
                                 [socio.id_utente_id, pid, date.today(), None, None]
                             )
 
-            guardar_historico_utente(request, utente.id_utente)
+                guardar_historico_utente(request, utente.id_utente)
 
             messages.success(request, f'Utente {nome} atualizado com sucesso!')
             return redirect('socioeconomicos_detalhe', id_utente=id_utente)

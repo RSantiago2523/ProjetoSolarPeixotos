@@ -674,7 +674,7 @@ def idosos_editar(request, id_utente):
                         obs = obs_queda[i].strip() if i < len(obs_queda) else ''
                         models.QuedasIdoso.objects.create(id_utente=idoso, data_queda=data, observacoes_queda=obs)
 
-            guardar_historico_idoso(request, utente.id_utente)            
+                guardar_historico_idoso(request, utente.id_utente)            
 
             messages.success(request, f'Idoso {nome} atualizado com sucesso!')
             return redirect('idosos_detalhe', id_utente=id_utente)
