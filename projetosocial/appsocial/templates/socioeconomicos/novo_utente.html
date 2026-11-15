@@ -111,7 +111,7 @@
                                 {% for m in membros_submetidos %}
                                     <tr>
                                         <td><input type="text" name="nome_membro" class="form-control" value="{{ m.nome }}"></td>
-                                        <td><input type="number" name="ano_nascimento" class="form-control" placeholder="AAAA" value="{{ m.ano }}"></td>
+                                        <td><input type="number" min="0" name="ano_nascimento" class="form-control" placeholder="AAAA" value="{{ m.ano }}"></td>
                                         <td><input type="text" name="grau_parentesco" class="form-control" value="{{ m.parentesco }}"></td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button>
@@ -120,7 +120,7 @@
                                 {% empty %}
                                     <tr>
                                         <td><input type="text" name="nome_membro" class="form-control"></td>
-                                        <td><input type="number" name="ano_nascimento" class="form-control" placeholder="AAAA"></td>
+                                        <td><input type="number" min="0" name="ano_nascimento" class="form-control" placeholder="AAAA"></td>
                                         <td><input type="text" name="grau_parentesco" class="form-control"></td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button>
@@ -335,7 +335,7 @@
         let linha = `
         <tr>
             <td><input type="text" name="nome_membro" class="form-control"></td>
-            <td><input type="number" name="ano_nascimento" class="form-control" placeholder="AAAA"></td>
+            <td><input type="number" min="0" name="ano_nascimento" class="form-control" placeholder="AAAA"></td>
             <td><input type="text" name="grau_parentesco" class="form-control"></td>
             <td class="text-center">
                 <button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button>
