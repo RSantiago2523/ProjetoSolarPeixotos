@@ -8,6 +8,23 @@ from ..views.historico import guardar_historico_utente
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .idosos import calcular_idade, IDADE_MAXIMA
+import math
+
+
+def erro_lista_valores(tipos, valores, descricao):
+    """Valida os pares (tipo, valor) enviados pelo formulário (despesas, escalões).
+    Devolve uma mensagem de erro, ou None se estiver tudo correto."""
+    if len(tipos) != len(valores):
+        return f'Dados {descricao} inválidos.'
+    for tipo, valor in zip(tipos, valores):
+        if tipo and valor:
+            try:
+                valido = math.isfinite(float(valor)) and float(valor) >= 0
+            except ValueError:
+                valido = False
+            if not valido:
+                return f'Os valores {descricao} têm de ser números iguais ou superiores a zero.'
+    return None
 
 @login_required
 def socioeconomicos_lista(request):
@@ -253,7 +270,7 @@ def socioeconomicos_novo(request):
             errors.append('Tipo de rendimento é obrigatório.')
         if not risco_social_str:
             errors.append('Risco social é obrigatório.')
-        if not problematicas_ids:
+        if not problematicas_ids and not request.POST.get('nova_problematica', '').strip():
             errors.append('É necessário selecionar pelo menos uma problemática.')
 
         # 3. Validação de membros do agregado conforme tipologia
@@ -262,13 +279,24 @@ def socioeconomicos_novo(request):
         anos_nasc = request.POST.getlist('ano_nascimento')
         parentescos = request.POST.getlist('grau_parentesco')
         membros_validos = []
-        for i in range(len(nomes_membros)):
+        membros_alinhados = len(nomes_membros) == len(anos_nasc) == len(parentescos)
+        if not membros_alinhados:
+            errors.append('Dados dos membros do agregado familiar inválidos.')
+        for i in range(len(nomes_membros) if membros_alinhados else 0):
             if nomes_membros[i].strip():
                 membros_validos.append({
                     'nome': nomes_membros[i].strip(),
                     'ano': anos_nasc[i].strip(),
                     'parentesco': parentescos[i].strip(),
                 })
+
+        # Despesas fixas e escalões: listas alinhadas e valores não negativos
+        for erro in (
+            erro_lista_valores(request.POST.getlist('tipo_despesa'), request.POST.getlist('valor_despesa'), 'das despesas fixas'),
+            erro_lista_valores(request.POST.getlist('tipo_escalao'), request.POST.getlist('valor_exato'), 'dos escalões de rendimento'),
+        ):
+            if erro:
+                errors.append(erro)
 
         if id_tipologia:
             # Buscar descrição da tipologia para verificar se é unipessoal
@@ -279,7 +307,7 @@ def socioeconomicos_novo(request):
                 errors.append('Tipologia selecionada inválida.')
                 tipologia_desc = ''
 
-            if tipologia_desc != 'unipessoal' and not membros_validos:
+            if membros_alinhados and tipologia_desc != 'unipessoal' and not membros_validos:
                 errors.append('Para esta tipologia, é necessário adicionar pelo menos um membro do agregado familiar.')
             elif tipologia_desc == 'unipessoal' and membros_validos:
                 errors.append('Para esta tipologia não deve haver outros membros do agregado familiar')
@@ -359,10 +387,12 @@ def socioeconomicos_novo(request):
                 data_atual = date.today()
                 nova_prob_texto = request.POST.get('nova_problematica', '').strip()
                 if nova_prob_texto:
-                        nova_prob = models.ProblematicasIdentificadas.objects.create(nome_problematica=nova_prob_texto)
+                        nova_prob = (models.ProblematicasIdentificadas.objects.filter(nome_problematica__iexact=nova_prob_texto).first()
+                                    or models.ProblematicasIdentificadas.objects.create(nome_problematica=nova_prob_texto))
                         novo_id = nova_prob.id_problematica
                         problematicas_ids.append(str(novo_id))
 
+                problematicas_ids = list(dict.fromkeys(problematicas_ids))
                 with connection.cursor() as cursor:
                     for pid in problematicas_ids:
                         cursor.execute(
@@ -508,13 +538,24 @@ def socioeconomicos_editar(request, id_utente):
         anos_nasc = request.POST.getlist('ano_nascimento')
         parentescos = request.POST.getlist('grau_parentesco')
         membros_validos = []
-        for i in range(len(nomes_membros)):
+        membros_alinhados = len(nomes_membros) == len(anos_nasc) == len(parentescos)
+        if not membros_alinhados:
+            errors.append('Dados dos membros do agregado familiar inválidos.')
+        for i in range(len(nomes_membros) if membros_alinhados else 0):
             if nomes_membros[i].strip():
                 membros_validos.append({
                     'nome': nomes_membros[i].strip(),
                     'ano': anos_nasc[i].strip(),
                     'parentesco': parentescos[i].strip(),
                 })
+
+        # Despesas fixas e escalões: listas alinhadas e valores não negativos
+        for erro in (
+            erro_lista_valores(request.POST.getlist('tipo_despesa'), request.POST.getlist('valor_despesa'), 'das despesas fixas'),
+            erro_lista_valores(request.POST.getlist('tipo_escalao'), request.POST.getlist('valor_exato'), 'dos escalões de rendimento'),
+        ):
+            if erro:
+                errors.append(erro)
 
         if id_tipologia:
             try:
@@ -523,7 +564,7 @@ def socioeconomicos_editar(request, id_utente):
             except models.TipologiaAgregadoFamiliar.DoesNotExist:
                 errors.append('Tipologia selecionada inválida.')
                 tipologia_desc = ''
-            if tipologia_desc != 'unipessoal' and not membros_validos:
+            if membros_alinhados and tipologia_desc != 'unipessoal' and not membros_validos:
                 errors.append('Para esta tipologia, é necessário adicionar pelo menos um membro do agregado familiar.')
             elif tipologia_desc == 'unipessoal' and membros_validos:
                 errors.append('Para esta tipologia não deve haver outros membros do agregado familiar')
@@ -600,7 +641,8 @@ def socioeconomicos_editar(request, id_utente):
                 # Campo aberto: nova problemática (opcional, sem separadores)
                 nova_prob_texto = request.POST.get('nova_problematica', '').strip()
                 if nova_prob_texto:
-                        nova_prob = models.ProblematicasIdentificadas.objects.create(nome_problematica=nova_prob_texto)
+                        nova_prob = (models.ProblematicasIdentificadas.objects.filter(nome_problematica__iexact=nova_prob_texto).first()
+                                    or models.ProblematicasIdentificadas.objects.create(nome_problematica=nova_prob_texto))
                         novo_id = nova_prob.id_problematica
                         problematicas_ids.append(str(novo_id))
 
@@ -690,7 +732,7 @@ def socioeconomicos_eliminar(request, id_utente):
                 cursor.execute("DELETE FROM UTENTES_SOCIO_ECONOMICAS WHERE ID_UTENTE = %s", [id_utente])
                 cursor.execute("DELETE FROM UTENTES WHERE ID_UTENTE = %s", [id_utente])
 
-        messages.success(request, f'Utente "{utente[1]}" eliminado com sucesso. Intervenções sem participantes também foram removidas.')
+        messages.success(request, f'Utente "{utente[1]}" eliminado com sucesso. Intervenções sem participantes (e os respetivos encaminhamentos) também foram removidas.')
 
     except Exception as e:
         messages.error(request, f'Erro ao eliminar utente: {str(e)}')

@@ -108,15 +108,18 @@ def criar_intervencao(request):
             with transaction.atomic():
                 # 1. Criar novo tipo de intervenção se foi fornecido texto
                 if novo_tipo:
-                    novo_obj = models.TipoIntervencao.objects.create(nome_tipo_intervencao=novo_tipo)
+                    novo_obj = (models.TipoIntervencao.objects.filter(nome_tipo_intervencao__iexact=novo_tipo).first()
+                                or models.TipoIntervencao.objects.create(nome_tipo_intervencao=novo_tipo))
                     id_tipo = novo_obj.id_tipo_intervencao
                 # 2. Criar nova entidade se foi fornecido texto
                 if nova_entidade:
-                    novo_obj = models.Entidade.objects.create(nome_entidade=nova_entidade)
+                    novo_obj = (models.Entidade.objects.filter(nome_entidade__iexact=nova_entidade).first()
+                                or models.Entidade.objects.create(nome_entidade=nova_entidade))
                     id_entidade = novo_obj.id_entidade
                 # 3. Criar novo programa se foi fornecido texto
                 if novo_programa:
-                    novo_obj = models.Programa.objects.create(programa=novo_programa)
+                    novo_obj = (models.Programa.objects.filter(programa__iexact=novo_programa).first()
+                                or models.Programa.objects.create(programa=novo_programa))
                     id_programa = novo_obj.id_programa
 
                 # 4. Criar intervenção
@@ -282,13 +285,16 @@ def editar_intervencao(request, id):
             with transaction.atomic():
                 # Criar novo tipo se fornecido (substitui o dropdown)
                 if novo_tipo:
-                    novo_obj = models.TipoIntervencao.objects.create(nome_tipo_intervencao=novo_tipo)
+                    novo_obj = (models.TipoIntervencao.objects.filter(nome_tipo_intervencao__iexact=novo_tipo).first()
+                                or models.TipoIntervencao.objects.create(nome_tipo_intervencao=novo_tipo))
                     id_tipo = novo_obj.id_tipo_intervencao
                 if nova_entidade:
-                    novo_obj = models.Entidade.objects.create(nome_entidade=nova_entidade)
+                    novo_obj = (models.Entidade.objects.filter(nome_entidade__iexact=nova_entidade).first()
+                                or models.Entidade.objects.create(nome_entidade=nova_entidade))
                     id_entidade = novo_obj.id_entidade
                 if novo_programa:
-                    novo_obj = models.Programa.objects.create(programa=novo_programa)
+                    novo_obj = (models.Programa.objects.filter(programa__iexact=novo_programa).first()
+                                or models.Programa.objects.create(programa=novo_programa))
                     id_programa = novo_obj.id_programa
 
                 # Atualizar intervenção
@@ -326,25 +332,22 @@ def eliminar_intervencao(request, id):
             messages.error(request, 'Intervenção não encontrada.')
             return redirect('intervencoes_lista')
 
-        # Verificar se existem encaminhamentos associados
-        cursor.execute("SELECT COUNT(*) FROM ENCAMINHAMENTOS_REDE WHERE ID_INTERVENCAO = %s", [id])
-        count = cursor.fetchone()[0]
-        if count > 0:
-            messages.error(
-                request,
-                f'Não é possível eliminar a intervenção #{id} porque existem {count} encaminhamento(s) associado(s).'
-            )
-            return redirect('intervencoes_lista')
-
     try:
         with transaction.atomic():
             with connection.cursor() as cursor:
+                # Apagar encaminhamentos associados a esta intervenção
+                cursor.execute("DELETE FROM ENCAMINHAMENTOS_REDE WHERE ID_INTERVENCAO = %s", [id])
+                removidos = cursor.rowcount
                 # Apagar registos em PARTICIPAR
                 cursor.execute("DELETE FROM PARTICIPAR WHERE ID_INTERVENCAO = %s", [id])
                 # Apagar a intervenção
                 cursor.execute("DELETE FROM INTERVENCAO WHERE ID_INTERVENCAO = %s", [id])
 
-        messages.success(request, f'Intervenção #{id} eliminada com sucesso.')
+        messages.success(
+            request,
+            f'Intervenção #{id} eliminada com sucesso.'
+            + (f' {removidos} encaminhamento(s) associado(s) também foram removidos.' if removidos else '')
+        )
         return redirect('intervencoes_lista')
 
     except Exception as e:
