@@ -122,7 +122,7 @@
                     <i class="bi bi-pencil"></i> Editar
                 </a>
                 <form method="POST" action="{% url 'eliminar_intervencao' intervencao.0 %}"
-                      onsubmit="return confirm('Tem a certeza que pretende eliminar esta intervenção? Esta ação é irreversível.');"
+                      onsubmit="return confirm('Tem a certeza que pretende eliminar esta intervenção e os encaminhamentos associados? Esta ação é irreversível.');"
                       style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">

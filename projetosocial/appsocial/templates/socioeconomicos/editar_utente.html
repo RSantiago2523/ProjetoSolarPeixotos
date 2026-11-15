@@ -202,13 +202,13 @@
                                         {% for e in escaloes_submetidos %}
                                         <tr>
                                             <td><input type="text" name="tipo_escalao" class="form-control" value="{{ e.tipo }}"></td>
-                                            <td><input type="number" step="0.01" name="valor_exato" class="form-control" value="{{ e.valor }}"></td>
+                                            <td><input type="number" step="0.01" min="0" name="valor_exato" class="form-control" value="{{ e.valor }}"></td>
                                             <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
                                         </tr>
                                         {% empty %}
                                         <tr>
                                             <td><input type="text" name="tipo_escalao" class="form-control" placeholder="Ex: 1º Escalão, IRS, ..."></td>
-                                            <td><input type="number" step="0.01" name="valor_exato" class="form-control"></td>
+                                            <td><input type="number" step="0.01" min="0" name="valor_exato" class="form-control"></td>
                                             <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
                                         </tr>
                                         {% endfor %}
@@ -241,7 +241,7 @@
                                                     {% endfor %}
                                                 </select>
                                             </td>
-                                            <td><input type="number" step="0.01" name="valor_despesa" class="form-control" value="{{ d.valor }}"></td>
+                                            <td><input type="number" step="0.01" min="0" name="valor_despesa" class="form-control" value="{{ d.valor }}"></td>
                                             <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
                                         </tr>
                                         {% empty %}
@@ -254,7 +254,7 @@
                                                     {% endfor %}
                                                 </select>
                                             </td>
-                                            <td><input type="number" step="0.01" name="valor_despesa" class="form-control"></td>
+                                            <td><input type="number" step="0.01" min="0" name="valor_despesa" class="form-control"></td>
                                             <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
                                         </tr>
                                         {% endfor %}
@@ -360,7 +360,7 @@
                         ${options}
                     </select>
                 </td>
-                <td><input type="number" step="0.01" name="valor_despesa" class="form-control"></td>
+                <td><input type="number" step="0.01" min="0" name="valor_despesa" class="form-control"></td>
                 <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
             </tr>`;
         document.querySelector("#tabela_despesas tbody").insertAdjacentHTML("beforeend", linha);
@@ -370,7 +370,7 @@
         let linha = `
             <tr>
                 <td><input type="text" name="tipo_escalao" class="form-control" placeholder="Ex: 1º Escalão, IRS, ..."></td>
-                <td><input type="number" step="0.01" name="valor_exato" class="form-control"></td>
+                <td><input type="number" step="0.01" min="0" name="valor_exato" class="form-control"></td>
                 <td class="text-center"><button type="button" class="btn btn-danger btn-sm remover"><i class="bi bi-x"></i></button></td>
             </tr>`;
         document.querySelector("#tabela_escaloes tbody").insertAdjacentHTML("beforeend", linha);
