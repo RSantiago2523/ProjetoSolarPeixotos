@@ -1069,11 +1069,11 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Spacer(1, 0.5*cm))
 
     # ---- Utentes por Zona e Risco Social ----
-    story.append(Paragraph(f"Utentes por Zona e Risco Social (zona a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
+    story.append(Paragraph(f"Utentes Socioeconómicos por Zona e Risco Social (zona a {data_fim.strftime('%d/%m/%Y')})", subtitulo_estilo))
     if zonas_utentes:
         table_data = [[
             Paragraph("Zona", celula_estilo),
-            Paragraph("Total de Utentes", celula_estilo),
+            Paragraph("Total de Utentes Socioeconómicos", celula_estilo),
             Paragraph("Com Risco Social", celula_estilo),
         ]]
         for zona in zonas_utentes:
