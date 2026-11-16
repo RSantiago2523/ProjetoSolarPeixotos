@@ -322,12 +322,16 @@ def editar_intervencao(request, id):
 
     return redirect('intervencoes_lista')
 
+
 @login_required
 @require_POST
 def eliminar_intervencao(request, id):
     # Verificar se a intervenção existe
     with connection.cursor() as cursor:
-        cursor.execute("SELECT ID_INTERVENCAO FROM INTERVENCAO WHERE ID_INTERVENCAO = %s", [id])
+        cursor.execute(
+            "SELECT ID_INTERVENCAO FROM INTERVENCAO WHERE ID_INTERVENCAO = %s",
+            [id]
+        )
         if not cursor.fetchone():
             messages.error(request, 'Intervenção não encontrada.')
             return redirect('intervencoes_lista')
@@ -335,18 +339,39 @@ def eliminar_intervencao(request, id):
     try:
         with transaction.atomic():
             with connection.cursor() as cursor:
+
                 # Apagar encaminhamentos associados a esta intervenção
-                cursor.execute("DELETE FROM ENCAMINHAMENTOS_REDE WHERE ID_INTERVENCAO = %s", [id])
+                cursor.execute(
+                    "DELETE FROM ENCAMINHAMENTOS_REDE WHERE ID_INTERVENCAO = %s",
+                    [id]
+                )
                 removidos = cursor.rowcount
+
                 # Apagar registos em PARTICIPAR
-                cursor.execute("DELETE FROM PARTICIPAR WHERE ID_INTERVENCAO = %s", [id])
+                cursor.execute(
+                    "DELETE FROM PARTICIPAR WHERE ID_INTERVENCAO = %s",
+                    [id]
+                )
+
+                # NOVO: Remover a referência em TER antes de eliminar a intervenção
+                cursor.execute(
+                    "UPDATE TER SET ID_INTERVENCAO = NULL WHERE ID_INTERVENCAO = %s",
+                    [id]
+                )
+
                 # Apagar a intervenção
-                cursor.execute("DELETE FROM INTERVENCAO WHERE ID_INTERVENCAO = %s", [id])
+                cursor.execute(
+                    "DELETE FROM INTERVENCAO WHERE ID_INTERVENCAO = %s",
+                    [id]
+                )
 
         messages.success(
             request,
             f'Intervenção #{id} eliminada com sucesso.'
-            + (f' {removidos} encaminhamento(s) associado(s) também foram removidos.' if removidos else '')
+            + (
+                f' {removidos} encaminhamento(s) associado(s) também foram removidos.'
+                if removidos else ''
+            )
         )
         return redirect('intervencoes_lista')
 

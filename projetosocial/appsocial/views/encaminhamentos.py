@@ -25,7 +25,7 @@ def encaminhamentos_lista(request):
                 i.ID_INTERVENCAO
             FROM ENCAMINHAMENTOS_REDE e
             JOIN ENTIDADE ent ON e.ID_ENTIDADE = ent.ID_ENTIDADE
-            JOIN TIPO_RESPOSTA tr ON e.ID_TIPO_RESPOSTA = tr.ID_TIPO_RESPOSTA
+            LEFT JOIN TIPO_RESPOSTA tr ON e.ID_TIPO_RESPOSTA = tr.ID_TIPO_RESPOSTA
             JOIN INTERVENCAO i ON e.ID_INTERVENCAO = i.ID_INTERVENCAO
             ORDER BY e.DATA_RESPOSTA DESC NULLS LAST
         """)

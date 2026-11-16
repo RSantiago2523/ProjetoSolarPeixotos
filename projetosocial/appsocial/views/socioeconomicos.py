@@ -688,6 +688,7 @@ def socioeconomicos_editar(request, id_utente):
 
     return redirect('socioeconomicos_lista')
 
+
 @login_required
 @require_POST
 def socioeconomicos_eliminar(request, id_utente):
@@ -712,7 +713,10 @@ def socioeconomicos_eliminar(request, id_utente):
                 # 2. Remover o utente de todas as participações
                 cursor.execute("DELETE FROM PARTICIPAR WHERE ID_UTENTE = %s", [id_utente])
 
-                # 3. Para cada intervenção que ficou sem participantes, eliminar os encaminhamentos e depois a intervenção
+                # 3. Apagar os registos TER antes de eliminar intervenções
+                cursor.execute("DELETE FROM TER WHERE ID_UTENTE = %s", [id_utente])
+
+                # 4. Para cada intervenção que ficou sem participantes, eliminar os encaminhamentos e depois a intervenção
                 for id_interv in intervencoes_afetadas:
                     # Verificar se ainda restam participantes nessa intervenção
                     cursor.execute("SELECT COUNT(*) FROM PARTICIPAR WHERE ID_INTERVENCAO = %s", [id_interv])
@@ -723,9 +727,8 @@ def socioeconomicos_eliminar(request, id_utente):
                         # Apagar a intervenção
                         cursor.execute("DELETE FROM INTERVENCAO WHERE ID_INTERVENCAO = %s", [id_interv])
 
-                # 4. Apagar os restantes dados do utente (ordem inversa das FK)
+                # 5. Apagar os restantes dados do utente (ordem inversa das FK)
                 cursor.execute("DELETE FROM HISTORICO_UTENTE_SOCIOECONOMICO WHERE ID_UTENTE = %s", [id_utente])
-                cursor.execute("DELETE FROM TER WHERE ID_UTENTE = %s", [id_utente])
                 cursor.execute("DELETE FROM MEMBROS_AGREGADO_FAMILIAR WHERE ID_UTENTE = %s", [id_utente])
                 cursor.execute("DELETE FROM DESPESAS_FIXAS WHERE ID_UTENTE = %s", [id_utente])
                 cursor.execute("DELETE FROM ESCALAO_RENDIMENTOS WHERE ID_UTENTE = %s", [id_utente])

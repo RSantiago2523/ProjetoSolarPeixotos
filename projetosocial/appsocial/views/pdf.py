@@ -194,7 +194,7 @@ def socioeconomicos_pdf(request, id_utente):
             row = [
                 Paragraph(escape(str(i[1] or "-")), celula_estilo),
                 Paragraph(escape(str(i[2] or "-")), celula_estilo),
-                Paragraph(i[3] or "-", celula_estilo),
+                Paragraph(escape(str(i[3] or "-")), celula_estilo),
                 Paragraph(i[4].strftime("%d/%m/%Y %H:%M") if i[4] else "-", celula_estilo),
                 Paragraph(escape(str(obs or '-')), celula_estilo)
             ]
