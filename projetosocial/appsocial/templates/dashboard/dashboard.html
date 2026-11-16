@@ -161,6 +161,7 @@
     </div>
     {% endif %}
 
+    <div class="container">
     <div class="row mt-3 mb-4">
     <div class="col-md-6 mx-auto">
         <div class="card card-custom p-3">
@@ -181,6 +182,7 @@
             </form>
             <small class="text-muted">Deixe o mês vazio para relatório anual.</small>
         </div>
+    </div>
     </div>
     </div>
 
@@ -273,36 +275,38 @@
                     </div>
                 </div>
             </div>
-            <div class="card card-custom">
-                <div class="card-body p-4">
-                    <h5 class="card-title">Contactos por Mês</h5>
+            <div class="col-md-6">
+                <div class="card card-custom">
+                    <div class="card-body p-4">
+                        <h5 class="card-title">Contactos por Mês</h5>
 
-                    <div class="chart-toolbar" data-chart="graficoContactos">
-                        <div class="chart-navigation">
-                            <button type="button" class="btn btn-outline-primary btn-sm chart-prev"
-                                    aria-label="Período anterior">
-                                <i class="bi bi-chevron-left"></i>
-                            </button>
+                        <div class="chart-toolbar" data-chart="graficoContactos">
+                            <div class="chart-navigation">
+                                <button type="button" class="btn btn-outline-primary btn-sm chart-prev"
+                                        aria-label="Período anterior">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
 
-                            <span class="chart-period">Últimos 12 meses</span>
+                                <span class="chart-period">Últimos 12 meses</span>
 
-                            <button type="button" class="btn btn-outline-primary btn-sm chart-next"
-                                    aria-label="Período seguinte">
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm chart-next"
+                                        aria-label="Período seguinte">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+
+                            <select class="form-select form-select-sm chart-period-select"
+                                    aria-label="Número de meses">
+                                <option value="6">6 meses</option>
+                                <option value="12" selected>12 meses</option>
+                                <option value="24">24 meses</option>
+                                <option value="all">Todo o período</option>
+                            </select>
                         </div>
 
-                        <select class="form-select form-select-sm chart-period-select"
-                                aria-label="Número de meses">
-                            <option value="6">6 meses</option>
-                            <option value="12" selected>12 meses</option>
-                            <option value="24">24 meses</option>
-                            <option value="all">Todo o período</option>
-                        </select>
-                    </div>
-
-                    <div class="chart-container">
-                        <canvas id="graficoContactos"></canvas>
+                        <div class="chart-container">
+                            <canvas id="graficoContactos"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
