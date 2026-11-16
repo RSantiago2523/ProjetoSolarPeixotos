@@ -48,6 +48,83 @@
             padding: 0.4rem 0.8rem;
             border-radius: 30px;
         }
+        /* Área dos gráficos */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+        }
+
+        .chart-container.chart-large {
+            height: 380px;
+        }
+
+        /* Controlos dos gráficos temporais */
+        .chart-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .chart-navigation {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-period {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #495057;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .chart-period-select {
+            max-width: 130px;
+            font-size: 0.875rem;
+        }
+
+        .chart-toolbar .btn {
+            min-width: 36px;
+        }
+
+        @media (max-width: 576px) {
+            .chart-toolbar {
+                align-items: stretch;
+            }
+
+            .chart-navigation {
+                justify-content: space-between;
+            }
+
+            .chart-container {
+                height: 260px;
+            }
+
+            .chart-container.chart-large {
+                height: 300px;
+            }
+        }
+
+        /* Tabelas */
+        .table-responsive {
+            border-radius: 8px;
+        }
+
+        .table thead th {
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -165,15 +242,67 @@
                 <div class="card card-custom">
                     <div class="card-body p-4">
                         <h5 class="card-title">Intervenções por Mês</h5>
-                        <canvas id="graficoIntervencoes" width="400" height="300"></canvas>
+
+                        <div class="chart-toolbar" data-chart="graficoIntervencoes">
+                            <div class="chart-navigation">
+                                <button type="button" class="btn btn-outline-primary btn-sm chart-prev"
+                                        aria-label="Período anterior">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+
+                                <span class="chart-period">Últimos 12 meses</span>
+
+                                <button type="button" class="btn btn-outline-primary btn-sm chart-next"
+                                        aria-label="Período seguinte">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+
+                            <select class="form-select form-select-sm chart-period-select"
+                                    aria-label="Número de meses">
+                                <option value="6">6 meses</option>
+                                <option value="12" selected>12 meses</option>
+                                <option value="24">24 meses</option>
+                                <option value="all">Todo o período</option>
+                            </select>
+                        </div>
+
+                        <div class="chart-container">
+                            <canvas id="graficoIntervencoes"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card card-custom">
-                    <div class="card-body p-4">
-                        <h5 class="card-title">Contactos por Mês</h5>
-                        <canvas id="graficoContactos" width="400" height="300"></canvas>
+            <div class="card card-custom">
+                <div class="card-body p-4">
+                    <h5 class="card-title">Contactos por Mês</h5>
+
+                    <div class="chart-toolbar" data-chart="graficoContactos">
+                        <div class="chart-navigation">
+                            <button type="button" class="btn btn-outline-primary btn-sm chart-prev"
+                                    aria-label="Período anterior">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+
+                            <span class="chart-period">Últimos 12 meses</span>
+
+                            <button type="button" class="btn btn-outline-primary btn-sm chart-next"
+                                    aria-label="Período seguinte">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+
+                        <select class="form-select form-select-sm chart-period-select"
+                                aria-label="Número de meses">
+                            <option value="6">6 meses</option>
+                            <option value="12" selected>12 meses</option>
+                            <option value="24">24 meses</option>
+                            <option value="all">Todo o período</option>
+                        </select>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="graficoContactos"></canvas>
                     </div>
                 </div>
             </div>
@@ -184,8 +313,37 @@
             <div class="col-md-12">
                 <div class="card card-custom">
                     <div class="card-body p-4">
-                        <h5 class="card-title">Evolução de Problemáticas (Ativos vs Novos)</h5>
-                        <canvas id="graficoEvolucaoProblematicas" width="400" height="300"></canvas>
+                        <h5 class="card-title">
+                            Evolução de Problemáticas (Ativos vs Novos)
+                        </h5>
+
+                        <div class="chart-toolbar" data-chart="graficoEvolucaoProblematicas">
+                            <div class="chart-navigation">
+                                <button type="button" class="btn btn-outline-primary btn-sm chart-prev"
+                                        aria-label="Período anterior">
+                                    <i class="bi bi-chevron-left"></i>
+                                </button>
+
+                                <span class="chart-period">Últimos 12 meses</span>
+
+                                <button type="button" class="btn btn-outline-primary btn-sm chart-next"
+                                        aria-label="Período seguinte">
+                                    <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+
+                            <select class="form-select form-select-sm chart-period-select"
+                                    aria-label="Número de meses">
+                                <option value="6">6 meses</option>
+                                <option value="12" selected>12 meses</option>
+                                <option value="24">24 meses</option>
+                                <option value="all">Todo o período</option>
+                            </select>
+                        </div>
+
+                        <div class="chart-container chart-large">
+                            <canvas id="graficoEvolucaoProblematicas"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -673,36 +831,247 @@
         const respostas_labels = safeParse('respostas-labels');
         const respostas_data = safeParse('respostas-data');
 
-        // Gráfico de linhas – Intervenções
-        new Chart(document.getElementById('graficoIntervencoes'), {
-            type: 'line',
-            data: { labels: intervencoes_labels, datasets: [{ label: 'Intervenções', data: intervencoes_data, borderColor: 'rgba(54, 162, 235, 1)', backgroundColor: 'rgba(54, 162, 235, 0.1)', fill: true, tension: 0.1 }] },
-            options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-        });
+        // Configurações gerais do Chart.js
+        Chart.defaults.animation = false;
+        Chart.defaults.responsive = true;
+        Chart.defaults.plugins.legend.position = 'bottom';
 
-        // Gráfico de linhas – Contactos
-        new Chart(document.getElementById('graficoContactos'), {
-            type: 'line',
-            data: { labels: contactos_labels, datasets: [{ label: 'Contactos', data: contactos_data, borderColor: 'rgba(75, 192, 192, 1)', backgroundColor: 'rgba(75, 192, 192, 0.1)', fill: true, tension: 0.1 }] },
-            options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-        });
+        // Gestão dos gráficos temporais
+        function criarGraficoTemporal(canvasId, labels, datasets) {
 
-        // NOVO: Evolução de Problemáticas (ativos vs novos)
-        if (evolucao_labels.length > 0) {
-            new Chart(document.getElementById('graficoEvolucaoProblematicas'), {
+            const canvas = document.getElementById(canvasId);
+
+            if (!canvas || !Array.isArray(labels) || labels.length === 0) {
+                if (canvas) {
+                    canvas.outerHTML =
+                        '<div class="alert alert-info">Sem dados disponíveis para este gráfico.</div>';
+                }
+                return;
+            }
+
+            const toolbar = document.querySelector(
+                `.chart-toolbar[data-chart="${canvasId}"]`
+            );
+
+            const periodoTexto = toolbar?.querySelector('.chart-period');
+            const seletor = toolbar?.querySelector('.chart-period-select');
+            const botaoAnterior = toolbar?.querySelector('.chart-prev');
+            const botaoSeguinte = toolbar?.querySelector('.chart-next');
+
+            let periodo = 12;
+            let deslocamento = 0;
+
+            const quantidadeTotal = labels.length;
+
+            const cores = [
+                {
+                    border: 'rgba(54, 162, 235, 1)',
+                    background: 'rgba(54, 162, 235, 0.1)'
+                },
+                {
+                    border: 'rgba(255, 99, 132, 1)',
+                    background: 'rgba(255, 99, 132, 0.1)'
+                }
+            ];
+
+            const datasetsOriginais = datasets.map(dataset => ({
+                ...dataset,
+                data: [...dataset.data]
+            }));
+
+            const chart = new Chart(canvas, {
                 type: 'line',
                 data: {
-                    labels: evolucao_labels,
-                    datasets: [
-                        { label: 'Novos casos', data: evolucao_novos, borderColor: 'rgba(255, 99, 132, 1)', backgroundColor: 'rgba(255, 99, 132, 0.1)', fill: true, tension: 0.1 },
-                        { label: 'Casos ativos (fim do mês)', data: evolucao_ativos, borderColor: 'rgba(54, 162, 235, 1)', backgroundColor: 'rgba(54, 162, 235, 0.1)', fill: true, tension: 0.1 }
-                    ]
+                    labels: [],
+                    datasets: datasetsOriginais.map((dataset, index) => ({
+                        ...dataset,
+                        borderColor: dataset.borderColor || cores[index % cores.length].border,
+                        backgroundColor: dataset.backgroundColor || cores[index % cores.length].background,
+                        fill: dataset.fill ?? true,
+                        tension: 0.25,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
+                        borderWidth: 2
+                    }))
                 },
-                options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 12
+                            }
+                        }
+                    }
+                }
             });
-        } else {
-            document.getElementById('graficoEvolucaoProblematicas').outerHTML = '<div class="alert alert-info">Sem dados suficientes para evolução de problemáticas.</div>';
+
+            function atualizarGrafico() {
+
+                const tamanhoJanela = periodo === 'all'
+                    ? quantidadeTotal
+                    : Number(periodo);
+
+                const inicio = Math.max(
+                    0,
+                    quantidadeTotal - tamanhoJanela - deslocamento
+                );
+
+                const fim = Math.min(
+                    quantidadeTotal,
+                    inicio + tamanhoJanela
+                );
+
+                const labelsVisiveis = labels.slice(inicio, fim);
+
+                chart.data.labels = labelsVisiveis;
+
+                chart.data.datasets = datasetsOriginais.map(dataset => ({
+                    ...dataset,
+                    data: dataset.data.slice(inicio, fim)
+                }));
+
+                chart.update('none');
+
+                if (periodoTexto) {
+                    if (labelsVisiveis.length === 0) {
+                        periodoTexto.textContent = 'Sem dados';
+                    } else if (periodo === 'all') {
+                        periodoTexto.textContent = 'Todo o período';
+                    } else {
+                        periodoTexto.textContent =
+                            `${labelsVisiveis[0]} – ${labelsVisiveis[labelsVisiveis.length - 1]}`;
+                    }
+                }
+
+                if (botaoAnterior) {
+                    botaoAnterior.disabled =
+                        periodo === 'all' ||
+                        inicio === 0;
+                }
+
+                if (botaoSeguinte) {
+                    botaoSeguinte.disabled =
+                        periodo === 'all' ||
+                        deslocamento === 0;
+                }
+            }
+
+            if (seletor) {
+                seletor.addEventListener('change', function () {
+                    periodo = this.value === 'all'
+                        ? 'all'
+                        : Number(this.value);
+
+                    deslocamento = 0;
+                    atualizarGrafico();
+                });
+            }
+
+            if (botaoAnterior) {
+                botaoAnterior.addEventListener('click', function () {
+
+                    if (periodo === 'all') return;
+
+                    const tamanhoJanela = Number(periodo);
+
+                    if (quantidadeTotal - tamanhoJanela - deslocamento > 0) {
+                        deslocamento += tamanhoJanela;
+                        atualizarGrafico();
+                    }
+                });
+            }
+
+            if (botaoSeguinte) {
+                botaoSeguinte.addEventListener('click', function () {
+
+                    if (periodo === 'all') return;
+
+                    const tamanhoJanela = Number(periodo);
+
+                    deslocamento = Math.max(
+                        0,
+                        deslocamento - tamanhoJanela
+                    );
+
+                    atualizarGrafico();
+                });
+            }
+
+            atualizarGrafico();
+
+            return chart;
         }
+
+
+        // Gráfico de intervenções
+        criarGraficoTemporal(
+            'graficoIntervencoes',
+            intervencoes_labels,
+            [{
+                label: 'Intervenções',
+                data: intervencoes_data,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)'
+            }]
+        );
+
+
+        // Gráfico de contactos
+        criarGraficoTemporal(
+            'graficoContactos',
+            contactos_labels,
+            [{
+                label: 'Contactos',
+                data: contactos_data,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)'
+            }]
+        );
+
+
+        // Gráfico de evolução das problemáticas
+        criarGraficoTemporal(
+            'graficoEvolucaoProblematicas',
+            evolucao_labels,
+            [
+                {
+                    label: 'Novos casos',
+                    data: evolucao_novos,
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)'
+                },
+                {
+                    label: 'Casos ativos (fim do mês)',
+                    data: evolucao_ativos,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)'
+                }
+            ]
+        );
 
         // Gráfico de respostas mais utilizadas
         if (respostas_labels.length > 0) {
