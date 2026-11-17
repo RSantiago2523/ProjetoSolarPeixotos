@@ -7,7 +7,7 @@ from datetime import date
 from ..views.historico import guardar_historico_utente
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from .idosos import calcular_idade, IDADE_MAXIMA
+from .idosos import calcular_idade, IDADE_MAXIMA, parse_data
 import math
 
 
@@ -240,6 +240,8 @@ def socioeconomicos_novo(request):
 
         if not nome:
             errors.append('Nome é obrigatório.')
+        elif len(nome) > 150:
+            errors.append('O nome não pode ter mais de 150 caracteres.')
         elif models.Utentes.objects.filter(nome_utente__iexact=nome).exists():
             errors.append(f'Já existe um utente com o nome "{nome}". Por favor, utilize um nome diferente.')
         
@@ -247,7 +249,7 @@ def socioeconomicos_novo(request):
             errors.append('Data de nascimento é obrigatória.')
         else:
             try:
-                data_nasc = date.fromisoformat(data_nascimento)
+                data_nasc = parse_data(data_nascimento)
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
                 elif calcular_idade(data_nasc) > IDADE_MAXIMA:
@@ -284,9 +286,17 @@ def socioeconomicos_novo(request):
             errors.append('Dados dos membros do agregado familiar inválidos.')
         for i in range(len(nomes_membros) if membros_alinhados else 0):
             if nomes_membros[i].strip():
+                ano = anos_nasc[i].strip()
+                if ano:
+                    try:
+                        ano_numero = int(ano)
+                        if ano_numero < 1900 or ano_numero > date.today().year:
+                            errors.append('O ano de nascimento dos membros deve estar entre 1900 e o ano atual.')
+                    except ValueError:
+                        errors.append('O ano de nascimento dos membros tem de ser um número válido.')
                 membros_validos.append({
                     'nome': nomes_membros[i].strip(),
-                    'ano': anos_nasc[i].strip(),
+                    'ano': ano,
                     'parentesco': parentescos[i].strip(),
                 })
 
@@ -497,13 +507,15 @@ def socioeconomicos_editar(request, id_utente):
         errors = []
         if not nome:
             errors.append('Nome é obrigatório.')
+        elif len(nome) > 150:
+            errors.append('O nome não pode ter mais de 150 caracteres.')
         elif models.Utentes.objects.filter(nome_utente__iexact=nome).exclude(pk=id_utente).exists():
             errors.append(f'Já existe um utente com o nome "{nome}". Por favor, utilize um nome diferente.')
         if not data_nascimento:
             errors.append('Data de nascimento é obrigatória.')
         else:
             try:
-                data_nasc = date.fromisoformat(data_nascimento)
+                data_nasc = parse_data(data_nascimento)
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
                 elif calcular_idade(data_nasc) > IDADE_MAXIMA:
@@ -543,9 +555,17 @@ def socioeconomicos_editar(request, id_utente):
             errors.append('Dados dos membros do agregado familiar inválidos.')
         for i in range(len(nomes_membros) if membros_alinhados else 0):
             if nomes_membros[i].strip():
+                ano = anos_nasc[i].strip()
+                if ano:
+                    try:
+                        ano_numero = int(ano)
+                        if ano_numero < 1900 or ano_numero > date.today().year:
+                            errors.append('O ano de nascimento dos membros deve estar entre 1900 e o ano atual.')
+                    except ValueError:
+                        errors.append('O ano de nascimento dos membros tem de ser um número válido.')
                 membros_validos.append({
                     'nome': nomes_membros[i].strip(),
-                    'ano': anos_nasc[i].strip(),
+                    'ano': ano,
                     'parentesco': parentescos[i].strip(),
                 })
 
