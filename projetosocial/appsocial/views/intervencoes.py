@@ -3,9 +3,15 @@ from django.db import connection, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from datetime import date
+from datetime import date, datetime
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+def parse_data_hora(valor):
+    try:
+        return datetime.fromisoformat(valor)
+    except ValueError:
+        return datetime.strptime(valor, '%d/%m/%Y')
+
 #Listar Intervencoes
 
 @login_required
@@ -64,7 +70,7 @@ def criar_intervencao(request):
         id_programa = request.POST.get('programa')
         data_intervencao = request.POST.get('data_intervencao')
         observacoes = request.POST.get('observacoes', '').strip()
-        utentes_ids = request.POST.getlist('utentes')
+        utentes_ids = list(dict.fromkeys(request.POST.getlist('utentes')))
 
         # Campos de texto livre (apenas para recolher, não criar agora)
         novo_tipo = request.POST.get('novo_tipo_intervencao', '').strip()
@@ -75,6 +81,11 @@ def criar_intervencao(request):
         errors = []
         if not data_intervencao:
             errors.append('Data da intervenção é obrigatória.')
+        else:
+            try:
+                data_intervencao = parse_data_hora(data_intervencao)
+            except ValueError:
+                errors.append('Data da intervenção inválida. Utilize DD/MM/AAAA ou uma data válida.')
         if not utentes_ids:
             errors.append('É necessário selecionar pelo menos um utente.')
 
@@ -254,7 +265,7 @@ def editar_intervencao(request, id):
         id_programa = request.POST.get('programa')
         data_intervencao = request.POST.get('data_intervencao')
         observacoes = request.POST.get('observacoes', '').strip()
-        utentes_ids = request.POST.getlist('utentes')
+        utentes_ids = list(dict.fromkeys(request.POST.getlist('utentes')))
 
         # Campos de texto livre (apenas para recolher)
         novo_tipo = request.POST.get('novo_tipo_intervencao', '').strip()
@@ -265,6 +276,11 @@ def editar_intervencao(request, id):
         errors = []
         if not data_intervencao:
             errors.append('Data da intervenção é obrigatória.')
+        else:
+            try:
+                data_intervencao = parse_data_hora(data_intervencao)
+            except ValueError:
+                errors.append('Data da intervenção inválida. Utilize DD/MM/AAAA ou uma data válida.')
         if not utentes_ids:
             errors.append('É necessário selecionar pelo menos um utente.')
 
