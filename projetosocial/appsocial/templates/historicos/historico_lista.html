@@ -57,10 +57,18 @@
                     <a href="{% url 'socioeconomicos_detalhe' id_utente %}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left"></i> Voltar ao detalhe
                     </a>
-                    <a href="{% url 'historico_utente_limpar_tudo' id_utente %}" class="btn btn-danger"
-                        onclick="return confirm('Eliminar todo o histórico? Esta ação é irreversível.');">
-                        <i class="bi bi-trash"></i> Limpar todo o histórico
-                    </a>
+                    <form method="POST"
+                          action="{% url 'historico_utente_limpar_tudo' id_utente %}"
+                          class="d-inline"
+                          onsubmit="return confirm('Eliminar todo o histórico? Esta ação é irreversível.');">
+                    
+                        {% csrf_token %}
+                    
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Limpar todo o histórico
+                        </button>
+                    
+                    </form>
                 </div>
 
                 <div class="table-responsive">
