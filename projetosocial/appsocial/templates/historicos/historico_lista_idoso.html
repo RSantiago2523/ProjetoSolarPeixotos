@@ -55,11 +55,18 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="card-title mb-0">Versões guardadas</h5>
                     <div>
-                        <a href="{% url 'historico_idoso_limpar_tudo' id_utente %}"
-                           class="btn btn-outline-danger btn-sm"
-                           onclick="return confirm('Eliminar todo o histórico? Esta ação é irreversível.');">
-                            <i class="bi bi-trash"></i> Limpar tudo
-                        </a>
+                        <form method="POST"
+                              action="{% url 'historico_idoso_limpar_tudo' id_utente %}"
+                              class="d-inline"
+                              onsubmit="return confirm('Eliminar todo o histórico? Esta ação é irreversível.');">
+                        
+                            {% csrf_token %}
+                        
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash"></i> Limpar tudo
+                            </button>
+                        
+                        </form>
                         <a href="{% url 'idosos_detalhe' id_utente %}" class="btn btn-outline-secondary btn-sm ms-2">
                             <i class="bi bi-arrow-left"></i> Voltar ao detalhe
                         </a>
