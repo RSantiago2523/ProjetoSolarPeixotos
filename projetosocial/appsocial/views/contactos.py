@@ -3,8 +3,15 @@ from django.db import connection, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from datetime import datetime
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+def parse_data_hora(valor):
+    try:
+        return datetime.fromisoformat(valor)
+    except ValueError:
+        return datetime.strptime(valor, '%d/%m/%Y')
 
 @login_required
 def listar_contactos(request):
@@ -113,6 +120,11 @@ def contactos_novo(request):
             errors.append('O tipo de contacto é obrigatório.')
         if not data_contacto:
             errors.append('A data do contacto é obrigatória.')
+        else:
+            try:
+                data_contacto = parse_data_hora(data_contacto)
+            except ValueError:
+                errors.append('Data do contacto inválida. Utilize DD/MM/AAAA ou uma data válida.')
         if not id_frequencia_contacto:
             errors.append('A frequência de contacto é obrigatória.')
 
@@ -190,6 +202,11 @@ def contactos_editar(request, id):
             errors.append('O tipo de contacto é obrigatório.')
         if not data_contacto:
             errors.append('A data do contacto é obrigatória.')
+        else:
+            try:
+                data_contacto = parse_data_hora(data_contacto)
+            except ValueError:
+                errors.append('Data do contacto inválida. Utilize DD/MM/AAAA ou uma data válida.')
         if not id_frequencia_contacto:
             errors.append('A frequência de contacto é obrigatória.')
 
