@@ -3,12 +3,18 @@ from django.db import connection, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from datetime import date
+from datetime import date, datetime
 from .historico import guardar_historico_idoso
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 IDADE_MINIMA_IDOSO = 65
 IDADE_MAXIMA = 120
+
+def parse_data(valor):
+    try:
+        return date.fromisoformat(valor)
+    except ValueError:
+        return datetime.strptime(valor, '%d/%m/%Y').date()
 
 def calcular_idade(d):
     hoje = date.today()
@@ -245,14 +251,18 @@ def idosos_novo(request):
 
         if not nome:
             errors.append('Nome é obrigatório.')
+        elif len(nome) > 150:
+            errors.append('O nome não pode ter mais de 150 caracteres.')
         elif models.Utentes.objects.filter(nome_utente__iexact=nome).exists():
             errors.append(f'Já existe um utente com o nome "{nome}". Por favor, utilize um nome diferente.')
 
+        if len(contacto_emergencia) > 100:
+            errors.append('O contacto de emergência não pode ter mais de 100 caracteres.')
         if not data_nascimento:
             errors.append('Data de nascimento é obrigatória.')
         else:
             try:
-                data_nasc = date.fromisoformat(data_nascimento)
+                data_nasc = parse_data(data_nascimento)
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
                 else:
@@ -520,13 +530,17 @@ def idosos_editar(request, id_utente):
         errors = []
         if not nome:
             errors.append('Nome é obrigatório.')
+        elif len(nome) > 150:
+            errors.append('O nome não pode ter mais de 150 caracteres.')
         elif models.Utentes.objects.filter(nome_utente__iexact=nome).exclude(pk=id_utente).exists():
             errors.append(f'Já existe um utente com o nome "{nome}". Por favor, utilize um nome diferente.')
+        if len(contacto_emergencia) > 100:
+            errors.append('O contacto de emergência não pode ter mais de 100 caracteres.')
         if not data_nascimento:
             errors.append('Data de nascimento é obrigatória.')
         else:
             try:
-                data_nasc = date.fromisoformat(data_nascimento)
+                data_nasc = parse_data(data_nascimento)
                 if data_nasc > date.today():
                     errors.append('Data de nascimento não pode ser futura.')
                 else:
