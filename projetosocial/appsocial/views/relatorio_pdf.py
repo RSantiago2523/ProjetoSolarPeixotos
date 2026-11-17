@@ -91,15 +91,19 @@ def relatorio_pdf(request, ano, mes=None):
         titulo = f"Relatório Anual - {ano}"
         periodo = f"Período: Ano {ano}"
 
+    
     if mes:
         data_inicio = datetime(ano, mes, 1)
+    
         if mes == 12:
-            data_fim = datetime(ano + 1, 1, 1) - timedelta(seconds=1)
+            data_fim = datetime(ano + 1, 1, 1) - timedelta(microseconds=1)
         else:
-            data_fim = datetime(ano, mes + 1, 1) - timedelta(seconds=1)
+            data_fim = datetime(ano, mes + 1, 1) - timedelta(microseconds=1)
+    
     else:
         data_inicio = datetime(ano, 1, 1)
-        data_fim = datetime(ano, 12, 31, 23, 59, 59)
+        data_fim = datetime(ano + 1, 1, 1) - timedelta(microseconds=1)
+
 
     with connection.cursor() as cursor:
 
