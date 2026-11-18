@@ -248,6 +248,14 @@ def idosos_novo(request):
 
         # Validações de campos obrigatórios
         errors = []
+        datas_queda = request.POST.getlist('data_queda')
+        for data in datas_queda:
+            if data:
+                try:
+                    if date.fromisoformat(data) > date.today():
+                        errors.append('A data da queda não pode ser futura.')
+                except ValueError:
+                    errors.append('A data da queda é inválida.')
 
         if not nome:
             errors.append('Nome é obrigatório.')
@@ -528,6 +536,14 @@ def idosos_editar(request, id_utente):
 
         # Validações (mesmas da criação)
         errors = []
+        datas_queda = request.POST.getlist('data_queda')
+        for data in datas_queda:
+            if data:
+                try:
+                    if date.fromisoformat(data) > date.today():
+                        errors.append('A data da queda não pode ser futura.')
+                except ValueError:
+                    errors.append('A data da queda é inválida.')
         if not nome:
             errors.append('Nome é obrigatório.')
         elif len(nome) > 150:
