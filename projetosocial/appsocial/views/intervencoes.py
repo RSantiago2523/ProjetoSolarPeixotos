@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from datetime import date, datetime
+from django.utils import timezone
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 def parse_data_hora(valor):
@@ -84,6 +85,8 @@ def criar_intervencao(request):
         else:
             try:
                 data_intervencao = parse_data_hora(data_intervencao)
+                if data_intervencao > timezone.localtime().replace(tzinfo=None):
+                    errors.append('A data da intervenção não pode ser futura.')
             except ValueError:
                 errors.append('Data da intervenção inválida. Utilize DD/MM/AAAA ou uma data válida.')
         if not utentes_ids:
@@ -279,6 +282,8 @@ def editar_intervencao(request, id):
         else:
             try:
                 data_intervencao = parse_data_hora(data_intervencao)
+                if data_intervencao > timezone.localtime().replace(tzinfo=None):
+                    errors.append('A data da intervenção não pode ser futura.')
             except ValueError:
                 errors.append('Data da intervenção inválida. Utilize DD/MM/AAAA ou uma data válida.')
         if not utentes_ids:
