@@ -3,7 +3,8 @@ from django.db import connection, transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from datetime import date
+from datetime import date, datetime
+from django.utils import timezone
 from .. import models
 from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -126,6 +127,13 @@ def encaminhamentos_novo(request):
 
         # Validações
         errors = []
+        if data_resposta:
+            try:
+                data_resposta = datetime.fromisoformat(data_resposta)
+                if data_resposta > timezone.localtime().replace(tzinfo=None):
+                    errors.append('A data da resposta não pode ser futura.')
+            except ValueError:
+                errors.append('A data da resposta é inválida.')
         if not id_intervencao:
             errors.append('É necessário selecionar uma intervenção.')
         if not id_entidade:
@@ -218,6 +226,13 @@ def encaminhamentos_editar(request, id):
 
         # Validações (idênticas à criação)
         errors = []
+        if data_resposta:
+            try:
+                data_resposta = datetime.fromisoformat(data_resposta)
+                if data_resposta > timezone.localtime().replace(tzinfo=None):
+                    errors.append('A data da resposta não pode ser futura.')
+            except ValueError:
+                errors.append('A data da resposta é inválida.')
         if not id_intervencao:
             errors.append('É necessário selecionar uma intervenção.')
         if not id_entidade:
