@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
+from django.utils import timezone
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -123,6 +124,8 @@ def contactos_novo(request):
         else:
             try:
                 data_contacto = parse_data_hora(data_contacto)
+                if data_contacto > timezone.localtime().replace(tzinfo=None):
+                    errors.append('A data do contacto não pode ser futura.')
             except ValueError:
                 errors.append('Data do contacto inválida. Utilize DD/MM/AAAA ou uma data válida.')
         if not id_frequencia_contacto:
@@ -205,6 +208,8 @@ def contactos_editar(request, id):
         else:
             try:
                 data_contacto = parse_data_hora(data_contacto)
+                if data_contacto > timezone.localtime().replace(tzinfo=None):
+                    errors.append('A data do contacto não pode ser futura.')
             except ValueError:
                 errors.append('Data do contacto inválida. Utilize DD/MM/AAAA ou uma data válida.')
         if not id_frequencia_contacto:
