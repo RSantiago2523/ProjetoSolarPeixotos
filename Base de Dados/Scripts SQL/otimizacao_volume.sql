@@ -214,6 +214,9 @@ ON QUEDAS_IDOSO (DATA_QUEDA DESC);
 CREATE INDEX IF NOT EXISTS idx_quedas_utente_data
 ON QUEDAS_IDOSO (ID_UTENTE, DATA_QUEDA DESC);
 
+CREATE INDEX IF NOT EXISTS idx_historico_socio_utente_data
+ON HISTORICO_SOCIO_ECONOMICO (ID_UTENTE, DATA_HISTORICO DESC);
+
 
 /* ============================================================
    14. ÍNDICES DAS TABELAS DE REFERÊNCIA
