@@ -48,7 +48,7 @@ def dashboard(request):
         problematica_data = [p[1] for p in problematicas]
 
         # 5. Idosos isolados (lista)
-        cursor.execute("SELECT nome_utente, idade, nivel_isolamento, vive_sozinho FROM vw_idosos_isolados")
+        cursor.execute("SELECT nome_utente, idade, nivel_isolamento, vive_sozinho FROM vw_idosos_isolados ORDER BY idade DESC")
         idosos_isolados = cursor.fetchall()
 
         # 6. Número total de idosos isolados
@@ -147,19 +147,19 @@ def dashboard(request):
         respostas_data = [row[1] for row in respostas_encaminhamentos]
 
         # 19. Idosos sem contacto há mais de 4 semanas
-        cursor.execute("SELECT * FROM vw_idosos_sem_contacto_4semanas")
+        cursor.execute("SELECT * FROM vw_idosos_sem_contacto_4semanas ORDER BY ultimo_contacto NULLS FIRST")
         idosos_sem_contacto = cursor.fetchall()
 
         # 20. Quedas repetidas
-        cursor.execute("SELECT * FROM vw_quedas_repetidas")
+        cursor.execute("SELECT * FROM vw_quedas_repetidas ORDER BY total_quedas DESC, ultima_queda DESC")
         quedas_repetidas = cursor.fetchall()
 
         # 21. Falta de rede de suporte
-        cursor.execute("SELECT * FROM vw_falta_rede_suporte")
+        cursor.execute("SELECT * FROM vw_falta_rede_suporte ORDER BY idade DESC")
         falta_rede_suporte = cursor.fetchall()
 
         # 22. Visitas prioritárias
-        cursor.execute("SELECT * FROM vw_visita_prioritaria")
+        cursor.execute("SELECT * FROM vw_visita_prioritaria ORDER BY prioridade, idade DESC")
         visitas_prioritarias = cursor.fetchall()
 
         # 23. Zonas com total de utentes e risco social
@@ -170,6 +170,7 @@ def dashboard(request):
         cursor.execute("""
             SELECT nome_utente, idade, zona, grau_atual, grau_anterior
             FROM vw_agravamento_dependencia
+            ORDER BY idade DESC
         """)
         agravamentos = cursor.fetchall()
 
@@ -193,10 +194,24 @@ def dashboard(request):
             SELECT nome_utente, grau_inicial, grau_final, isolamento_inicial, isolamento_final, melhorou
             FROM vw_melhorias
             WHERE melhorou = 1
+            ORDER BY nome_utente
         """)
         melhorias = cursor.fetchall()
 
+    # Limitar as linhas mostradas por tabela (o total real mantém-se) para a página não crescer com os dados
+    LIMITE = 50
+    n_idosos_isolados, n_idosos_sem_contacto, n_quedas_repetidas = len(idosos_isolados), len(idosos_sem_contacto), len(quedas_repetidas)
+    n_falta_rede_suporte, n_visitas_prioritarias = len(falta_rede_suporte), len(visitas_prioritarias)
+    n_agravamentos, n_melhorias = len(agravamentos), len(melhorias)
+    idosos_isolados, idosos_sem_contacto, quedas_repetidas = idosos_isolados[:LIMITE], idosos_sem_contacto[:LIMITE], quedas_repetidas[:LIMITE]
+    falta_rede_suporte, visitas_prioritarias = falta_rede_suporte[:LIMITE], visitas_prioritarias[:LIMITE]
+    agravamentos, melhorias = agravamentos[:LIMITE], melhorias[:LIMITE]
+
     context = {
+        'limite_tabelas': LIMITE,
+        'n_idosos_isolados': n_idosos_isolados, 'n_idosos_sem_contacto': n_idosos_sem_contacto,
+        'n_quedas_repetidas': n_quedas_repetidas, 'n_falta_rede_suporte': n_falta_rede_suporte,
+        'n_visitas_prioritarias': n_visitas_prioritarias, 'n_agravamentos': n_agravamentos, 'n_melhorias': n_melhorias,
         'totais': totais,
         'intervencoes_labels': intervencoes_labels,
         'intervencoes_data': intervencoes_data,
