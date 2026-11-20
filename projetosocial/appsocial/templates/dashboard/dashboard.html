@@ -516,6 +516,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    {% if n_idosos_isolados > limite_tabelas %}<p class="text-muted small mt-2 mb-0">A mostrar {{ limite_tabelas }} de {{ n_idosos_isolados }}.</p>{% endif %}
                 </div>
             </div>
         </div>
@@ -557,6 +558,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    {% if n_idosos_sem_contacto > limite_tabelas %}<p class="text-muted small mt-2 mb-0">A mostrar {{ limite_tabelas }} de {{ n_idosos_sem_contacto }}.</p>{% endif %}
                 </div>
             </div>
         </div>
@@ -574,6 +576,7 @@
                             {% empty %}<tr><td colspan="5">Nenhum idoso com quedas repetidas.</td></tr>{% endfor %}
                         </tbody>
                     </table>
+                    {% if n_quedas_repetidas > limite_tabelas %}<p class="text-muted small mt-2 mb-0">A mostrar {{ limite_tabelas }} de {{ n_quedas_repetidas }}.</p>{% endif %}
                 </div>
             </div>
         </div>
@@ -591,6 +594,7 @@
                             {% empty %}<tr><td colspan="3">Nenhum idoso nesta situação.</td></tr>{% endfor %}
                         </tbody>
                     </table>
+                    {% if n_falta_rede_suporte > limite_tabelas %}<p class="text-muted small mt-2 mb-0">A mostrar {{ limite_tabelas }} de {{ n_falta_rede_suporte }}.</p>{% endif %}
                 </div>
             </div>
         </div>
@@ -611,6 +615,7 @@
                             {% empty %}<tr><td colspan="5">Nenhuma situação prioritária.</td></tr>{% endfor %}
                         </tbody>
                     </table>
+                    {% if n_visitas_prioritarias > limite_tabelas %}<p class="text-muted small mt-2 mb-0">A mostrar {{ limite_tabelas }} de {{ n_visitas_prioritarias }}.</p>{% endif %}
                 </div>
             </div>
         </div>
@@ -675,6 +680,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    {% if n_agravamentos > limite_tabelas %}<p class="text-muted small mt-2 mb-0">A mostrar {{ limite_tabelas }} de {{ n_agravamentos }}.</p>{% endif %}
                 </div>
             </div>
         </div>
@@ -751,6 +757,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    {% if n_melhorias > limite_tabelas %}<p class="text-muted small mt-2 mb-0">A mostrar {{ limite_tabelas }} de {{ n_melhorias }}.</p>{% endif %}
                 </div>
             </div>
         </div>
