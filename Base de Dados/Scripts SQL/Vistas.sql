@@ -336,21 +336,28 @@ WITH meses AS (
         date_trunc('month', CURRENT_DATE),
         '1 month'::interval
     ) AS mes
+),
+-- Agregação única de TER por mês (em vez de cruzar cada mês com todas as linhas de TER)
+iniciados AS (
+    SELECT date_trunc('month', data_inicio) AS mes, COUNT(*) AS n
+    FROM ter
+    GROUP BY 1
+),
+terminados AS (
+    SELECT date_trunc('month', data_fim) AS mes, COUNT(*) AS n
+    FROM ter
+    WHERE data_fim IS NOT NULL
+    GROUP BY 1
 )
 SELECT 
     to_char(m.mes, 'YYYY-MM') AS ano_mes,
     m.mes,
-    COUNT(DISTINCT t.id_ter) FILTER (
-        WHERE t.data_inicio >= m.mes 
-          AND t.data_inicio < m.mes + interval '1 month'
-    ) AS novos_casos,
-    COUNT(DISTINCT t.id_ter) FILTER (
-        WHERE t.data_inicio < m.mes + interval '1 month'
-          AND (t.data_fim IS NULL OR t.data_fim >= m.mes + interval '1 month')
-    ) AS ativos_fim_mes
+    COALESCE(i.n, 0) AS novos_casos,
+    -- ativos no fim do mês = acumulado de iniciados - acumulado de terminados
+    (SUM(COALESCE(i.n, 0)) OVER (ORDER BY m.mes) - SUM(COALESCE(f.n, 0)) OVER (ORDER BY m.mes))::bigint AS ativos_fim_mes
 FROM meses m
-LEFT JOIN ter t ON true
-GROUP BY m.mes
+LEFT JOIN iniciados i ON i.mes = m.mes
+LEFT JOIN terminados f ON f.mes = m.mes
 ORDER BY m.mes;
 
 -- ============================================================
@@ -474,5 +481,5 @@ JOIN UTENTES u ON p.id_utente = u.ID_UTENTE
 WHERE p.id_utente IN (SELECT DISTINCT ID_UTENTE FROM CONTACTO);   -- ← alterado de PARTICIPAR para CONTACTO
 
 /*Índices Opcionais*/
-CREATE INDEX idx_hist_idoso_utente_data ON historico_idoso (id_utente, data_historico);
-CREATE INDEX idx_hist_idoso_utente_data_desc ON historico_idoso (id_utente, data_historico DESC);
+CREATE INDEX IF NOT EXISTS idx_hist_idoso_utente_data ON historico_idoso (id_utente, data_historico);
+CREATE INDEX IF NOT EXISTS idx_hist_idoso_utente_data_desc ON historico_idoso (id_utente, data_historico DESC);
