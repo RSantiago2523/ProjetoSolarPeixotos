@@ -219,6 +219,21 @@ ON public.historico_utente_socioeconomico (id_utente, data_historico DESC);
 
 
 /* ============================================================
+   13. ÍNDICES PARA PESQUISA E RELAÇÕES FREQUENTES
+   ============================================================ */
+
+-- A tabela PARTICIPAR é consultada frequentemente nos dois sentidos.
+CREATE INDEX IF NOT EXISTS idx_participar_utente_intervencao
+ON PARTICIPAR (ID_UTENTE, ID_INTERVENCAO);
+
+-- Pesquisa parcial de nomes (%texto%) através de trigramas.
+-- Requer a extensão pg_trgm, disponível no PostgreSQL.
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_utentes_nome_trgm
+ON UTENTES USING GIN (NOME_UTENTE gin_trgm_ops);
+
+
+/* ============================================================
    14. ÍNDICES DAS TABELAS DE REFERÊNCIA
    ============================================================ */
 
