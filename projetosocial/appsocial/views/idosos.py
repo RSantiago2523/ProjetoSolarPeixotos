@@ -7,6 +7,7 @@ from datetime import date, datetime
 from .historico import guardar_historico_idoso
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .paginacao import ConsultaPaginada
 IDADE_MINIMA_IDOSO = 65
 IDADE_MAXIMA = 120
 
@@ -50,9 +51,7 @@ def idosos_lista(request):
 
     query += " ORDER BY u.ID_UTENTE"
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        todos_idosos = cursor.fetchall()
+    todos_idosos = ConsultaPaginada(query, params)
 
     # Paginação (20 registos por página)
     paginator = Paginator(todos_idosos, 20)
