@@ -48,6 +48,7 @@ def intervencoes_lista(request):
     except EmptyPage:
         intervencoes_page = paginator.page(paginator.num_pages)
 
+    intervencoes_page.janela = range(max(1, intervencoes_page.number - 2), min(paginator.num_pages, intervencoes_page.number + 2) + 1)
     return render(request, 'intervencoes/lista_intervencoes.html', {
         'intervencoes': intervencoes_page,
     })
@@ -59,7 +60,7 @@ def criar_intervencao(request):
             'tipos_intervencao': models.TipoIntervencao.objects.all(),
             'entidades': models.Entidade.objects.all(),
             'programas': models.Programa.objects.all(),
-            'utentes': models.UtentesSocioEconomicas.objects.select_related('id_utente').all(),
+            'utentes': models.UtentesSocioEconomicas.objects.select_related('id_utente__id_zona_utente').all(),
         }
         return render(request, 'intervencoes/criar_intervencao.html', context)
 
@@ -254,7 +255,7 @@ def editar_intervencao(request, id):
             'tipos_intervencao': models.TipoIntervencao.objects.all(),
             'entidades': models.Entidade.objects.all(),
             'programas': models.Programa.objects.all(),
-            'utentes': models.UtentesSocioEconomicas.objects.select_related('id_utente').all(),
+            'utentes': models.UtentesSocioEconomicas.objects.select_related('id_utente__id_zona_utente').all(),
             'utentes_associados': utentes_associados,
             'submetido': submetido,
         }
