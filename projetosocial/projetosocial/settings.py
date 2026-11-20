@@ -116,6 +116,11 @@ else:
     }
 
 
+# Uma única pessoa utiliza a aplicação: reutiliza-se a ligação por um período curto,
+# evitando abrir uma nova ligação PostgreSQL em cada pedido.
+DATABASES["default"]["CONN_MAX_AGE"] = 60
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
