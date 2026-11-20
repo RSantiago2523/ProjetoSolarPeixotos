@@ -8,13 +8,13 @@ from django.utils import timezone
 from .. import models
 from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .paginacao import ConsultaPaginada
 
 @login_required
 def encaminhamentos_lista(request):
     page_number = request.GET.get('page', 1)
 
-    with connection.cursor() as cursor:
-        cursor.execute("""
+    todos_encaminhamentos = ConsultaPaginada("""
             SELECT 
                 e.ID_ENCAMINHAMENTO,
                 e.DATA_RESPOSTA,
@@ -28,9 +28,8 @@ def encaminhamentos_lista(request):
             JOIN ENTIDADE ent ON e.ID_ENTIDADE = ent.ID_ENTIDADE
             LEFT JOIN TIPO_RESPOSTA tr ON e.ID_TIPO_RESPOSTA = tr.ID_TIPO_RESPOSTA
             JOIN INTERVENCAO i ON e.ID_INTERVENCAO = i.ID_INTERVENCAO
-            ORDER BY e.DATA_RESPOSTA DESC NULLS LAST
+            ORDER BY e.DATA_RESPOSTA DESC NULLS LAST, e.ID_ENCAMINHAMENTO DESC
         """)
-        todos_encaminhamentos = cursor.fetchall()
 
     paginator = Paginator(todos_encaminhamentos, 20)  # 20 por página
     try:
