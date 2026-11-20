@@ -6,6 +6,8 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 from datetime import date, datetime
 from decimal import Decimal
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .paginacao import ConsultaPaginada
 
 
 def parse_date(date_str):
@@ -190,14 +192,20 @@ def guardar_historico_utente(request, id_utente):
 
 @login_required
 def historico_utente_lista(request, id_utente):
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT id_historico, data_historico, usuario
-            FROM historico_utente_socioeconomico
-            WHERE id_utente = %s
-            ORDER BY data_historico DESC
-        """, [id_utente])
-        historicos = cursor.fetchall()
+    historicos_query = ConsultaPaginada("""
+        SELECT id_historico, data_historico, usuario
+        FROM historico_utente_socioeconomico
+        WHERE id_utente = %s
+        ORDER BY data_historico DESC, id_historico DESC
+    """, [id_utente])
+    paginator = Paginator(historicos_query, 25)
+    try:
+        historicos = paginator.page(request.GET.get('page', 1))
+    except PageNotAnInteger:
+        historicos = paginator.page(1)
+    except EmptyPage:
+        historicos = paginator.page(paginator.num_pages or 1)
+    historicos.janela = range(max(1, historicos.number - 2), min(paginator.num_pages, historicos.number + 2) + 1)
 
     # Obter nome do utente para exibir no título
     with connection.cursor() as cursor:
@@ -438,14 +446,20 @@ def guardar_historico_idoso(request, id_utente):
 
 @login_required
 def historico_idoso_lista(request, id_utente):
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT id_historico, data_historico, usuario
-            FROM historico_idoso
-            WHERE id_utente = %s
-            ORDER BY data_historico DESC
-        """, [id_utente])
-        historicos = cursor.fetchall()
+    historicos_query = ConsultaPaginada("""
+        SELECT id_historico, data_historico, usuario
+        FROM historico_idoso
+        WHERE id_utente = %s
+        ORDER BY data_historico DESC, id_historico DESC
+    """, [id_utente])
+    paginator = Paginator(historicos_query, 25)
+    try:
+        historicos = paginator.page(request.GET.get('page', 1))
+    except PageNotAnInteger:
+        historicos = paginator.page(1)
+    except EmptyPage:
+        historicos = paginator.page(paginator.num_pages or 1)
+    historicos.janela = range(max(1, historicos.number - 2), min(paginator.num_pages, historicos.number + 2) + 1)
 
     with connection.cursor() as cursor:
         cursor.execute("SELECT nome_utente FROM utentes WHERE id_utente = %s", [id_utente])
