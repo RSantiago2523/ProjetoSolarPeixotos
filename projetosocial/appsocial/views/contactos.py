@@ -45,6 +45,7 @@ def listar_contactos(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
+    page_obj.janela = range(max(1, page_obj.number - 2), min(paginator.num_pages, page_obj.number + 2) + 1)
     return render(request, "contactos/listar_contactos.html", {
         "contactos": page_obj,
     })
@@ -92,7 +93,7 @@ def detalhe_contacto(request, id):
 def contactos_novo(request):
     if request.method == 'GET':
         context = {
-            'idosos': models.UtentesIdosos.objects.select_related('id_utente').all(),
+            'idosos': models.UtentesIdosos.objects.select_related('id_utente__id_zona_utente').all(),
             'tipos_contacto': models.TipoContacto.objects.all(),
             'frequencias_contacto': models.FrequenciaContacto.objects.all(),
         }
@@ -181,7 +182,7 @@ def contactos_editar(request, id):
         }
         context = {
             'contacto': contacto,
-            'idosos': models.UtentesIdosos.objects.select_related('id_utente').all(),
+            'idosos': models.UtentesIdosos.objects.select_related('id_utente__id_zona_utente').all(),
             'tipos_contacto': models.TipoContacto.objects.all(),
             'frequencias_contacto': models.FrequenciaContacto.objects.all(),
             'submetido': submetido,
@@ -227,7 +228,7 @@ def contactos_editar(request, id):
             }
             context = {
                 'contacto': contacto,
-                'idosos': models.UtentesIdosos.objects.select_related('id_utente').all(),
+                'idosos': models.UtentesIdosos.objects.select_related('id_utente__id_zona_utente').all(),
                 'tipos_contacto': models.TipoContacto.objects.all(),
                 'frequencias_contacto': models.FrequenciaContacto.objects.all(),
                 'submetido': submetido,
