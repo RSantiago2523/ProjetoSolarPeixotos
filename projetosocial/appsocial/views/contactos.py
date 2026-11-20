@@ -7,6 +7,7 @@ from datetime import datetime
 from django.utils import timezone
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .paginacao import ConsultaPaginada
 
 def parse_data_hora(valor):
     try:
@@ -18,8 +19,7 @@ def parse_data_hora(valor):
 def listar_contactos(request):
     page_number = request.GET.get('page', 1)
 
-    with connection.cursor() as cursor:
-        cursor.execute("""
+    todos_contactos = ConsultaPaginada("""
             SELECT 
                 c.ID_CONTACTO,
                 u.NOME_UTENTE AS NOME_IDOSO,
@@ -34,9 +34,8 @@ def listar_contactos(request):
             JOIN ADMINISTRADORES a ON c.ID_ADMINISTRADOR = a.ID_ADMINISTRADOR
             JOIN TIPO_CONTACTO tc ON c.ID_TIPO_CONTACTO = tc.ID_TIPO_CONTACTO
             JOIN FREQUENCIA_CONTACTO fc ON c.ID_FREQUENCIA_CONTACTO = fc.ID_FREQUENCIA_CONTACTO
-            ORDER BY c.DATA_CONTACTO DESC
+            ORDER BY c.DATA_CONTACTO DESC, c.ID_CONTACTO DESC
         """)
-        todos_contactos = cursor.fetchall()
 
     paginator = Paginator(todos_contactos, 20)  # 20 por página (ajustável)
     try:
