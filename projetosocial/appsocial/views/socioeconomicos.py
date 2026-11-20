@@ -7,6 +7,7 @@ from datetime import date
 from ..views.historico import guardar_historico_utente
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .paginacao import ConsultaPaginada
 from .idosos import calcular_idade, IDADE_MAXIMA, parse_data
 import math
 
@@ -56,9 +57,7 @@ def socioeconomicos_lista(request):
 
     query += " ORDER BY u.ID_UTENTE"
 
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        resultados = cursor.fetchall()
+    resultados = ConsultaPaginada(query, params)
 
     # Paginação
     paginator = Paginator(resultados, 20)  # 20 registos por página
