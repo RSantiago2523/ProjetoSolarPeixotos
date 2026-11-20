@@ -62,6 +62,7 @@ def idosos_lista(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
+    page_obj.janela = range(max(1, page_obj.number - 2), min(paginator.num_pages, page_obj.number + 2) + 1)
     return render(request, 'idosos/lista_idosos.html', {
         'idosos': page_obj,
         'filtro_nome': nome_filter,
