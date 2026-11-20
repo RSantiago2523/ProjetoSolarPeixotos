@@ -2,6 +2,14 @@ from django.db import connection
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
+def _buscar_lista_limitada(cursor, sql_dados, sql_total, limite):
+    """Obtém apenas as linhas apresentadas e calcula o total na base de dados."""
+    cursor.execute(sql_total)
+    total = cursor.fetchone()[0] or 0
+    cursor.execute(f"{sql_dados} LIMIT %s", [limite])
+    return cursor.fetchall(), total
+
+
 def _serie_mensal(linhas):
     """Devolve (labels, valores) com 0 nos meses sem dados entre o primeiro e o último mês.
     Ignora linhas sem data (ano/mês nulos)."""
@@ -48,8 +56,12 @@ def dashboard(request):
         problematica_data = [p[1] for p in problematicas]
 
         # 5. Idosos isolados (lista)
-        cursor.execute("SELECT nome_utente, idade, nivel_isolamento, vive_sozinho FROM vw_idosos_isolados ORDER BY idade DESC")
-        idosos_isolados = cursor.fetchall()
+        idosos_isolados, n_idosos_isolados = _buscar_lista_limitada(
+            cursor,
+            "SELECT nome_utente, idade, nivel_isolamento, vive_sozinho FROM vw_idosos_isolados ORDER BY idade DESC",
+            "SELECT COUNT(*) FROM vw_idosos_isolados",
+            50,
+        )
 
         # 6. Número total de idosos isolados
         cursor.execute("SELECT total_idosos_isolados FROM vw_numero_idosos_isolados")
@@ -147,32 +159,49 @@ def dashboard(request):
         respostas_data = [row[1] for row in respostas_encaminhamentos]
 
         # 19. Idosos sem contacto há mais de 4 semanas
-        cursor.execute("SELECT * FROM vw_idosos_sem_contacto_4semanas ORDER BY ultimo_contacto NULLS FIRST")
-        idosos_sem_contacto = cursor.fetchall()
+        idosos_sem_contacto, n_idosos_sem_contacto = _buscar_lista_limitada(
+            cursor,
+            "SELECT * FROM vw_idosos_sem_contacto_4semanas ORDER BY ultimo_contacto NULLS FIRST",
+            "SELECT COUNT(*) FROM vw_idosos_sem_contacto_4semanas",
+            50,
+        )
 
         # 20. Quedas repetidas
-        cursor.execute("SELECT * FROM vw_quedas_repetidas ORDER BY total_quedas DESC, ultima_queda DESC")
-        quedas_repetidas = cursor.fetchall()
+        quedas_repetidas, n_quedas_repetidas = _buscar_lista_limitada(
+            cursor,
+            "SELECT * FROM vw_quedas_repetidas ORDER BY total_quedas DESC, ultima_queda DESC",
+            "SELECT COUNT(*) FROM vw_quedas_repetidas",
+            50,
+        )
 
         # 21. Falta de rede de suporte
-        cursor.execute("SELECT * FROM vw_falta_rede_suporte ORDER BY idade DESC")
-        falta_rede_suporte = cursor.fetchall()
+        falta_rede_suporte, n_falta_rede_suporte = _buscar_lista_limitada(
+            cursor,
+            "SELECT * FROM vw_falta_rede_suporte ORDER BY idade DESC",
+            "SELECT COUNT(*) FROM vw_falta_rede_suporte",
+            50,
+        )
 
         # 22. Visitas prioritárias
-        cursor.execute("SELECT * FROM vw_visita_prioritaria ORDER BY prioridade, idade DESC")
-        visitas_prioritarias = cursor.fetchall()
+        visitas_prioritarias, n_visitas_prioritarias = _buscar_lista_limitada(
+            cursor,
+            "SELECT * FROM vw_visita_prioritaria ORDER BY prioridade, idade DESC",
+            "SELECT COUNT(*) FROM vw_visita_prioritaria",
+            50,
+        )
 
         # 23. Zonas com total de utentes e risco social
         cursor.execute("SELECT descricao_zona_utente, total, risco FROM vw_zona_utentes ORDER BY descricao_zona_utente")
         zonas_utentes = cursor.fetchall()
 
         # ----- 24. Agravamento do grau de dependência -----
-        cursor.execute("""
-            SELECT nome_utente, idade, zona, grau_atual, grau_anterior
-            FROM vw_agravamento_dependencia
-            ORDER BY idade DESC
-        """)
-        agravamentos = cursor.fetchall()
+        agravamentos, n_agravamentos = _buscar_lista_limitada(
+            cursor,
+            """SELECT nome_utente, idade, zona, grau_atual, grau_anterior
+               FROM vw_agravamento_dependencia ORDER BY idade DESC""",
+            "SELECT COUNT(*) FROM vw_agravamento_dependencia",
+            50,
+        )
 
         # ----- 25. Total de idosos que vivem sozinhos -----
         cursor.execute("SELECT total_vive_sozinho FROM vw_vive_sozinho")
@@ -190,22 +219,16 @@ def dashboard(request):
         mais_contactos = cursor.fetchall()
 
         # ----- 28. Melhorias após participação -----
-        cursor.execute("""
-            SELECT nome_utente, grau_inicial, grau_final, isolamento_inicial, isolamento_final, melhorou
-            FROM vw_melhorias
-            WHERE melhorou = 1
-            ORDER BY nome_utente
-        """)
-        melhorias = cursor.fetchall()
+        melhorias, n_melhorias = _buscar_lista_limitada(
+            cursor,
+            """SELECT nome_utente, grau_inicial, grau_final, isolamento_inicial, isolamento_final, melhorou
+               FROM vw_melhorias WHERE melhorou = 1 ORDER BY nome_utente""",
+            "SELECT COUNT(*) FROM vw_melhorias WHERE melhorou = 1",
+            50,
+        )
 
-    # Limitar as linhas mostradas por tabela (o total real mantém-se) para a página não crescer com os dados
+    # As listas extensas já chegam limitadas pela base de dados.
     LIMITE = 50
-    n_idosos_isolados, n_idosos_sem_contacto, n_quedas_repetidas = len(idosos_isolados), len(idosos_sem_contacto), len(quedas_repetidas)
-    n_falta_rede_suporte, n_visitas_prioritarias = len(falta_rede_suporte), len(visitas_prioritarias)
-    n_agravamentos, n_melhorias = len(agravamentos), len(melhorias)
-    idosos_isolados, idosos_sem_contacto, quedas_repetidas = idosos_isolados[:LIMITE], idosos_sem_contacto[:LIMITE], quedas_repetidas[:LIMITE]
-    falta_rede_suporte, visitas_prioritarias = falta_rede_suporte[:LIMITE], visitas_prioritarias[:LIMITE]
-    agravamentos, melhorias = agravamentos[:LIMITE], melhorias[:LIMITE]
 
     context = {
         'limite_tabelas': LIMITE,
