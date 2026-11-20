@@ -181,7 +181,7 @@
                         <li class="page-item disabled"><span class="page-link">Anterior</span></li>
                     {% endif %}
 
-                    {% for num in intervencoes.paginator.page_range %}
+                    {% for num in intervencoes.janela %}
                         {% if intervencoes.number == num %}
                             <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                         {% elif num > intervencoes.number|add:'-3' and num < intervencoes.number|add:'3' %}
