@@ -158,7 +158,7 @@
                             <li class="page-item disabled"><span class="page-link">Anterior</span></li>
                         {% endif %}
 
-                        {% for num in contactos.paginator.page_range %}
+                        {% for num in contactos.janela %}
                             {% if contactos.number == num %}
                                 <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                             {% elif num > contactos.number|add:'-3' and num < contactos.number|add:'3' %}
