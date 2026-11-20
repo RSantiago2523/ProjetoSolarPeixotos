@@ -7,6 +7,7 @@ from datetime import date, datetime
 from django.utils import timezone
 from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .paginacao import ConsultaPaginada
 def parse_data_hora(valor):
     try:
         return datetime.fromisoformat(valor)
@@ -21,8 +22,7 @@ def intervencoes_lista(request):
     page_number = request.GET.get('page', 1)
 
     # Query SQL (sem alterações)
-    with connection.cursor() as cursor:
-        cursor.execute("""
+    todas_intervencoes = ConsultaPaginada("""
             SELECT 
                 i.ID_INTERVENCAO,
                 i.DATA_INTERVENCAO,
@@ -36,9 +36,8 @@ def intervencoes_lista(request):
             JOIN ENTIDADE e ON i.ID_ENTIDADE = e.ID_ENTIDADE
             JOIN PROGRAMA p ON i.ID_PROGRAMA = p.ID_PROGRAMA
             JOIN ADMINISTRADORES a ON i.ID_ADMINISTRADOR = a.ID_ADMINISTRADOR
-            ORDER BY i.DATA_INTERVENCAO DESC
+            ORDER BY i.DATA_INTERVENCAO DESC, i.ID_INTERVENCAO DESC
         """)
-        todas_intervencoes = cursor.fetchall()
 
     # Paginação (50 itens por página, por exemplo)
     paginator = Paginator(todas_intervencoes, 20)  # ajuste o número conforme necessário
