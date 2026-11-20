@@ -215,7 +215,7 @@ CREATE INDEX IF NOT EXISTS idx_quedas_utente_data
 ON QUEDAS_IDOSO (ID_UTENTE, DATA_QUEDA DESC);
 
 CREATE INDEX IF NOT EXISTS idx_historico_socio_utente_data
-ON public.historico_utente_socioeconomico (id_utente, data_historico DESC)
+ON public.historico_utente_socioeconomico (id_utente, data_historico DESC);
 
 
 /* ============================================================
