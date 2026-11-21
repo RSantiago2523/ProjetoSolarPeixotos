@@ -345,7 +345,7 @@ def idosos_novo(request):
                     id_genero_id=id_genero,
                     id_zona_utente_id=id_zona,
                     nome_utente=nome,
-                    data_nascimento=data_nascimento,
+                    data_nascimento=data_nasc,
                     data_criacao=date.today(),
                 )
 
@@ -627,7 +627,7 @@ def idosos_editar(request, id_utente):
 
                 # 1. Atualizar Utentes
                 utente.nome_utente = nome
-                utente.data_nascimento = data_nascimento
+                utente.data_nascimento = data_nasc
                 utente.id_genero_id = id_genero
                 utente.id_zona_utente_id = id_zona
                 utente.save()
