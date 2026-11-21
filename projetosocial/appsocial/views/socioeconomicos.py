@@ -341,7 +341,7 @@ def socioeconomicos_novo(request):
                     id_genero_id=id_genero,
                     id_zona_utente_id=id_zona,
                     nome_utente=nome,
-                    data_nascimento=data_nascimento,
+                    data_nascimento=data_nasc,
                     data_criacao=date.today(),
                 )
 
@@ -602,7 +602,7 @@ def socioeconomicos_editar(request, id_utente):
             with transaction.atomic():
                 # 1. Atualizar dados básicos do utente
                 utente.nome_utente = nome
-                utente.data_nascimento = data_nascimento
+                utente.data_nascimento = data_nasc
                 utente.id_genero_id = id_genero
                 utente.id_zona_utente_id = id_zona
                 utente.save()
