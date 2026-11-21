@@ -130,7 +130,7 @@ def encaminhamentos_novo(request):
         if data_resposta:
             try:
                 data_resposta = datetime.fromisoformat(data_resposta)
-                if data_resposta > timezone.localtime().replace(tzinfo=None):
+                if data_resposta > timezone.now():
                     errors.append('A data da resposta não pode ser futura.')
             except ValueError:
                 errors.append('A data da resposta é inválida.')
@@ -229,7 +229,7 @@ def encaminhamentos_editar(request, id):
         if data_resposta:
             try:
                 data_resposta = datetime.fromisoformat(data_resposta)
-                if data_resposta > timezone.localtime().replace(tzinfo=None):
+                if data_resposta > timezone.now():
                     errors.append('A data da resposta não pode ser futura.')
             except ValueError:
                 errors.append('A data da resposta é inválida.')
