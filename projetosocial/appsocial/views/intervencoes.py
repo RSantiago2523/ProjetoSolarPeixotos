@@ -85,7 +85,7 @@ def criar_intervencao(request):
         else:
             try:
                 data_intervencao = parse_data_hora(data_intervencao)
-                if data_intervencao > timezone.localtime().replace(tzinfo=None):
+                if data_intervencao > timezone.now():
                     errors.append('A data da intervenção não pode ser futura.')
             except ValueError:
                 errors.append('Data da intervenção inválida. Utilize DD/MM/AAAA ou uma data válida.')
@@ -282,7 +282,7 @@ def editar_intervencao(request, id):
         else:
             try:
                 data_intervencao = parse_data_hora(data_intervencao)
-                if data_intervencao > timezone.localtime().replace(tzinfo=None):
+                if data_intervencao > timezone.now():
                     errors.append('A data da intervenção não pode ser futura.')
             except ValueError:
                 errors.append('Data da intervenção inválida. Utilize DD/MM/AAAA ou uma data válida.')
