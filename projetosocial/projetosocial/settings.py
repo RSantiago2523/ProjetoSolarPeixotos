@@ -35,6 +35,11 @@ ALLOWED_HOSTS = [
     "projetosolarpeixotos-production.up.railway.app",
 ]
 
+# Em desenvolvimento local (DEBUG=True) é preciso aceitar localhost, porque
+# quando ALLOWED_HOSTS não está vazio o Django deixa de o aceitar por omissão.
+if DEBUG:
+    ALLOWED_HOSTS += ["localhost", "127.0.0.1", "[::1]"]
+
 CSRF_TRUSTED_ORIGINS = [
     "https://projetosolarpeixotos-production.up.railway.app",
 ]
@@ -69,7 +74,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
 ]
 
 ROOT_URLCONF = 'projetosocial.urls'
@@ -98,9 +102,9 @@ WSGI_APPLICATION = 'projetosocial.wsgi.application'
 if os.getenv("DATABASE_URL"):
     # Railway
     DATABASES = {
-    "default": dj_database_url.parse(
-        os.environ.get("DATABASE_URL")
-    )
+        "default": dj_database_url.parse(
+            os.environ.get("DATABASE_URL")
+        )
     }
 else:
     # Desenvolvimento local
@@ -149,6 +153,9 @@ TIME_ZONE = 'Europe/Lisbon'
 
 USE_I18N = True
 
+# Tem de se manter False: as colunas da BD são "timestamp" sem fuso horário e as views
+# trabalham com datetimes "naive" (com USE_TZ=False, timezone.now() devolve a hora local
+# de Lisboa e timezone.localtime() sem argumentos dá erro).
 USE_TZ = False
 
 
@@ -158,8 +165,50 @@ USE_TZ = False
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# STATICFILES_STORAGE foi removido no Django 5.1 (é ignorado); usa-se STORAGES.
+# Em produção o WhiteNoise comprime e acrescenta um hash aos nomes dos ficheiros
+# (exige collectstatic); em desenvolvimento usa-se o armazenamento simples, para não
+# ser preciso correr collectstatic.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if DEBUG
+            else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        ),
+    },
+}
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
+
+
+# Logging
+# Por omissão, com DEBUG=False o Django não escreve os erros 500 na consola, pelo que
+# não apareceriam nos logs do Railway. Assim, os erros passam a ser escritos no stderr.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "simples": {
+            "format": "{asctime} {levelname} {name}: {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simples",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "WARNING"),
+        },
+    },
+}
