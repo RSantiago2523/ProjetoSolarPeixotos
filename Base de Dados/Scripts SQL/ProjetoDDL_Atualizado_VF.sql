@@ -165,7 +165,7 @@ create table UTENTES (
    ID_TIPO_UTENTE       bigint              not null,
    ID_GENERO            bigint              not null,
    ID_ZONA_UTENTE       bigint              not null,
-   NOME_UTENTE          varchar(50),
+   NOME_UTENTE          varchar(150),
    DATA_NASCIMENTO      date,
    DATA_CRIACAO         date DEFAULT CURRENT_DATE,
    constraint PK_UTENTES primary key (ID_UTENTE),
@@ -193,7 +193,7 @@ create table UTENTES_IDOSOS (
    ID_FREQUENCIA_CONTACTO_SOCIAL bigint              not null,
    ID_TIPO_HABITACAO    bigint              not null,
    VIVE_SOZINHO         boolean,
-   CONTACTO_EMERGENCIA  varchar(50),
+   CONTACTO_EMERGENCIA  varchar(100),
    FAMILIAR_REFERENCIA  text,
    MEDICACAO_DIARIA     boolean,
    DIFICULDADE_ACESSO_SAUDE boolean,
@@ -601,7 +601,7 @@ create table PARTICIPAR (
 /*==============================================================*/
 create table PROBLEMATICAS_IDENTIFICADAS (
    ID_PROBLEMATICA      bigserial              not null,
-   NOME_PROBLEMATICA    varchar(30),
+   NOME_PROBLEMATICA    varchar(100),
    constraint PK_PROBLEMATICAS_IDENTIFICADAS primary key (ID_PROBLEMATICA)
 );
 
