@@ -124,7 +124,7 @@ def contactos_novo(request):
         else:
             try:
                 data_contacto = parse_data_hora(data_contacto)
-                if data_contacto > timezone.localtime().replace(tzinfo=None):
+                if data_contacto > timezone.now():
                     errors.append('A data do contacto não pode ser futura.')
             except ValueError:
                 errors.append('Data do contacto inválida. Utilize DD/MM/AAAA ou uma data válida.')
@@ -208,7 +208,7 @@ def contactos_editar(request, id):
         else:
             try:
                 data_contacto = parse_data_hora(data_contacto)
-                if data_contacto > timezone.localtime().replace(tzinfo=None):
+                if data_contacto > timezone.now():
                     errors.append('A data do contacto não pode ser futura.')
             except ValueError:
                 errors.append('Data do contacto inválida. Utilize DD/MM/AAAA ou uma data válida.')
