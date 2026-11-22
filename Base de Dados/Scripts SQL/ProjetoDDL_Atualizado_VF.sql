@@ -407,7 +407,7 @@ create table DESPESAS_FIXAS (
    ID_DESPESA           bigserial              not null,
    ID_TIPO_DESPESA      bigint              not null,
    ID_UTENTE            bigint              not null,
-   VALOR_DESPESA        real,
+   VALOR_DESPESA        numeric(10,2),
    constraint PK_DESPESAS_FIXAS primary key (ID_DESPESA),
    constraint FK_DESPESAS_DESPESA_UTENTES_ foreign key (ID_UTENTE)
       references UTENTES_SOCIO_ECONOMICAS (ID_UTENTE)
@@ -535,7 +535,7 @@ create table ESCALAO_RENDIMENTOS (
    ID_ESCALAO           bigserial              not null,
    ID_UTENTE            bigint              not null,
    TIPO_ESCALAO         varchar(50),
-   VALOR_EXATO          real,
+   VALOR_EXATO          numeric(10,2),
    constraint PK_ESCALAO_RENDIMENTOS primary key (ID_ESCALAO),
    constraint FK_ESCALAO__LIGAR_UTENTES_ foreign key (ID_UTENTE)
       references UTENTES_SOCIO_ECONOMICAS (ID_UTENTE)
