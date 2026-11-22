@@ -9,15 +9,19 @@ from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .paginacao import ConsultaPaginada
 from .idosos import calcular_idade, IDADE_MAXIMA, parse_data
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from decimal import Decimal, InvalidOperation
 
 
 LIMITE_VALOR = Decimal('99999999.99')  # máximo da coluna NUMERIC(10,2)
 
 
 def valor_decimal(valor):
-    """Converte o texto do formulário num Decimal com 2 casas decimais (coluna NUMERIC(10,2))."""
-    return Decimal(valor).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    numero = Decimal(valor)
+
+    if not numero.is_finite() or numero.as_tuple().exponent < -2:
+        raise InvalidOperation
+
+    return numero
 
 
 def erro_lista_valores(tipos, valores, descricao):
