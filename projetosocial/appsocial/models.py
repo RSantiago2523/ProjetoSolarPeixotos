@@ -54,7 +54,7 @@ class DespesasFixas(models.Model):
     id_despesa = models.BigAutoField(primary_key=True)
     id_tipo_despesa = models.ForeignKey('TipoDespesa', models.PROTECT, db_column='id_tipo_despesa')
     id_utente = models.ForeignKey('UtentesSocioEconomicas', models.PROTECT, db_column='id_utente')
-    valor_despesa = models.FloatField(blank=True, null=True)
+    valor_despesa = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -115,7 +115,7 @@ class EscalaoRendimentos(models.Model):
     id_escalao = models.BigAutoField(primary_key=True)
     id_utente = models.ForeignKey('UtentesSocioEconomicas', models.PROTECT, db_column='id_utente')
     tipo_escalao = models.CharField(max_length=50, blank=True, null=True)
-    valor_exato = models.FloatField(blank=True, null=True)
+    valor_exato = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     class Meta:
         managed = False
