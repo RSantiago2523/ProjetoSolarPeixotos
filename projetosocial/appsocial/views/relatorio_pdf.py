@@ -650,7 +650,12 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM historico_idoso hi
                 JOIN UTENTES u ON u.id_utente = hi.id_utente
                 WHERE hi.data_historico < %s AND u.data_criacao < %s
-                ORDER BY hi.id_utente, hi.data_historico ASC
+                -- estado no início do período: último snapshot anterior ao período;
+                -- se o utente só passou a ter histórico dentro do período, o primeiro desse período
+                ORDER BY hi.id_utente,
+                         (hi.data_historico >= %s),
+                         CASE WHEN hi.data_historico < %s THEN hi.data_historico END DESC,
+                         hi.data_historico ASC
             ),
             snapshots_fim AS (
                 SELECT DISTINCT ON (hi.id_utente)
@@ -694,7 +699,7 @@ def relatorio_pdf(request, ano, mes=None):
             FROM comparacao
             WHERE melhorou = 1
             ORDER BY nome_utente
-        """, [data_fim, data_fim, data_fim, data_fim, data_inicio, data_fim])
+        """, [data_fim, data_fim, data_inicio, data_inicio, data_fim, data_fim, data_inicio, data_fim])
         melhorias = _esc_rows(cursor.fetchall())
 
         # ----- Agravamento do grau de dependência (qualquer piora dentro do período) -----
