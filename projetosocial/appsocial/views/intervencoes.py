@@ -335,13 +335,14 @@ def editar_intervencao(request, id):
                             [uid, id]
                         )
 
-                        # NOVO: utentes que deixaram de participar ficam sem intervenção associada na problemática
-                        cursor.execute(
-                            """UPDATE TER SET ID_INTERVENCAO = NULL
-                               WHERE ID_INTERVENCAO = %s
-                                 AND ID_UTENTE NOT IN (SELECT ID_UTENTE FROM PARTICIPAR WHERE ID_INTERVENCAO = %s)""",
-                            [id, id]
-                        )
+                    # NOVO: utentes que deixaram de participar ficam sem intervenção associada na problemática
+                    # (executado depois de TODOS os participantes serem reinseridos, para não limpar os que continuam)
+                    cursor.execute(
+                        """UPDATE TER SET ID_INTERVENCAO = NULL
+                           WHERE ID_INTERVENCAO = %s
+                             AND ID_UTENTE NOT IN (SELECT ID_UTENTE FROM PARTICIPAR WHERE ID_INTERVENCAO = %s)""",
+                        [id, id]
+                    )
 
             messages.success(request, f'Intervenção #{id} atualizada com sucesso!')
             return redirect('detalhe_intervencao', id=id)
