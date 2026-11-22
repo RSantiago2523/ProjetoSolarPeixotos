@@ -9,7 +9,15 @@ from .. import models
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .paginacao import ConsultaPaginada
 from .idosos import calcular_idade, IDADE_MAXIMA, parse_data
-import math
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+
+
+LIMITE_VALOR = Decimal('99999999.99')  # máximo da coluna NUMERIC(10,2)
+
+
+def valor_decimal(valor):
+    """Converte o texto do formulário num Decimal com 2 casas decimais (coluna NUMERIC(10,2))."""
+    return Decimal(valor).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
 
 def erro_lista_valores(tipos, valores, descricao):
@@ -20,11 +28,12 @@ def erro_lista_valores(tipos, valores, descricao):
     for tipo, valor in zip(tipos, valores):
         if tipo and valor:
             try:
-                valido = math.isfinite(float(valor)) and float(valor) >= 0
-            except ValueError:
+                numero = valor_decimal(valor)
+                valido = numero.is_finite() and 0 <= numero <= LIMITE_VALOR
+            except InvalidOperation:
                 valido = False
             if not valido:
-                return f'Os valores {descricao} têm de ser números iguais ou superiores a zero.'
+                return f'Os valores {descricao} têm de ser números iguais ou superiores a zero (máximo 99999999,99).'
     return None
 
 @login_required
@@ -377,7 +386,7 @@ def socioeconomicos_novo(request):
                         models.DespesasFixas.objects.create(
                             id_tipo_despesa_id=tipo_id,
                             id_utente=socio,
-                            valor_despesa=float(valor),
+                            valor_despesa=valor_decimal(valor),
                         )
 
                 # 4.5 Escalões de rendimento (se houver)
@@ -390,7 +399,7 @@ def socioeconomicos_novo(request):
                         models.EscalaoRendimentos.objects.create(
                             id_utente=socio,
                             tipo_escalao=tipo,
-                            valor_exato=float(valor),
+                            valor_exato=valor_decimal(valor),
                         )
 
                 # 4.6 Problemáticas
@@ -639,7 +648,7 @@ def socioeconomicos_editar(request, id_utente):
                         models.DespesasFixas.objects.create(
                             id_tipo_despesa_id=tipo_id,
                             id_utente=socio,
-                            valor_despesa=float(valor),
+                            valor_despesa=valor_decimal(valor),
                         )
 
                 # 5. Escalões – apagar e recriar
@@ -653,7 +662,7 @@ def socioeconomicos_editar(request, id_utente):
                         models.EscalaoRendimentos.objects.create(
                             id_utente=socio,
                             tipo_escalao=tipo,
-                            valor_exato=float(valor),
+                            valor_exato=valor_decimal(valor),
                         )
 
                 # 6. Problemáticas – atualizar com datas
