@@ -266,7 +266,7 @@ class Participar(models.Model):
 
 class ProblematicasIdentificadas(models.Model):
     id_problematica = models.BigAutoField(primary_key=True)
-    nome_problematica = models.CharField(max_length=30, blank=True, null=True)
+    nome_problematica = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -462,7 +462,7 @@ class Utentes(models.Model):
     id_tipo_utente = models.ForeignKey(TipoUtente, models.PROTECT, db_column='id_tipo_utente')
     id_genero = models.ForeignKey(Genero, models.PROTECT, db_column='id_genero')
     id_zona_utente = models.ForeignKey('ZonaUtente', models.PROTECT, db_column='id_zona_utente')
-    nome_utente = models.CharField(max_length=50, blank=True, null=True)
+    nome_utente = models.CharField(max_length=150, blank=True, null=True)
     data_nascimento = models.DateField(blank=True, null=True)
     data_criacao = models.DateField(blank=True, null=True)
 
@@ -481,7 +481,7 @@ class UtentesIdosos(models.Model):
     id_frequencia_contacto_social = models.ForeignKey(FrequenciaContactoSocial, models.PROTECT, db_column='id_frequencia_contacto_social')
     id_tipo_habitacao = models.ForeignKey(TipoHabitacao, models.PROTECT, db_column='id_tipo_habitacao')
     vive_sozinho = models.BooleanField(blank=True, null=True)
-    contacto_emergencia = models.CharField(max_length=50, blank=True, null=True)
+    contacto_emergencia = models.CharField(max_length=100, blank=True, null=True)
     familiar_referencia = models.TextField(blank=True, null=True)
     medicacao_diaria = models.BooleanField(blank=True, null=True)
     dificuldade_acesso_saude = models.BooleanField(blank=True, null=True)
