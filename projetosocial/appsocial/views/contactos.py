@@ -223,7 +223,7 @@ def contactos_editar(request, id):
                 'idoso': id_utente,
                 'tipo_contacto': id_tipo_contacto,
                 'frequencia_contacto': id_frequencia_contacto,
-                'data_contacto': data_contacto,
+                'data_contacto': request.POST.get('data_contacto', ''),
                 'observacoes': observacoes,
             }
             context = {
