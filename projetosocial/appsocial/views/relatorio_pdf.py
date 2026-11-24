@@ -639,106 +639,109 @@ def relatorio_pdf(request, ano, mes=None):
         """, [data_fim, data_inicio, data_fim])
         idosos_sem_contacto = _esc_rows(cursor.fetchall())
 
-        # ----- Melhorias após participação -----
+        # ----- Melhorias após participação (estado atual vs imediatamente anterior, só dados do período) -----
         cursor.execute("""
-            WITH snapshots_inicio AS (
-                SELECT DISTINCT ON (hi.id_utente)
-                    hi.id_utente,
-                    hi.snapshot_json->'principal'->>'nome' AS nome,
-                    hi.snapshot_json->'principal'->>'grau_autonomia' AS grau_inicio,
-                    hi.snapshot_json->'principal'->>'nivel_isolamento' AS isolamento_inicio
-                FROM historico_idoso hi
-                JOIN UTENTES u ON u.id_utente = hi.id_utente
-                WHERE hi.data_historico < %s AND u.data_criacao < %s
-                -- estado no início do período: último snapshot anterior ao período;
-                -- se o utente só passou a ter histórico dentro do período, o primeiro desse período
-                ORDER BY hi.id_utente,
-                         (hi.data_historico >= %s),
-                         CASE WHEN hi.data_historico < %s THEN hi.data_historico END DESC,
-                         hi.data_historico ASC
-            ),
-            snapshots_fim AS (
-                SELECT DISTINCT ON (hi.id_utente)
-                    hi.id_utente,
-                    hi.snapshot_json->'principal'->>'grau_autonomia' AS grau_fim,
-                    hi.snapshot_json->'principal'->>'nivel_isolamento' AS isolamento_fim
-                FROM historico_idoso hi
-                JOIN UTENTES u ON u.id_utente = hi.id_utente
-                WHERE hi.data_historico <= %s AND u.data_criacao <= %s
-                ORDER BY hi.id_utente, hi.data_historico DESC
-            ),
-            comparacao AS (
-                SELECT 
-                    i.nome AS nome_utente,
-                    i.grau_inicio,
-                    f.grau_fim,
-                    i.isolamento_inicio,
-                    f.isolamento_fim,
-                    CASE 
-                        WHEN (i.grau_inicio = 'Autónomo' AND f.grau_fim IN ('Parcialmente dependente', 'Dependente'))
-                        OR (i.grau_inicio = 'Parcialmente dependente' AND f.grau_fim = 'Dependente')
-                        OR (i.isolamento_inicio = 'Nenhum' AND f.isolamento_fim IN ('Moderado', 'Elevado'))
-                        OR (i.isolamento_inicio = 'Moderado' AND f.isolamento_fim = 'Elevado')
-                        THEN 0   -- piorou numa das dimensões: não conta como melhoria
-                        WHEN (i.grau_inicio = 'Dependente' AND f.grau_fim IN ('Parcialmente dependente', 'Autónomo'))
-                        OR (i.grau_inicio = 'Parcialmente dependente' AND f.grau_fim = 'Autónomo')
-                        OR (i.isolamento_inicio = 'Elevado' AND f.isolamento_fim IN ('Moderado', 'Nenhum'))
-                        OR (i.isolamento_inicio = 'Moderado' AND f.isolamento_fim = 'Nenhum')
-                        THEN 1 ELSE 0
-                    END AS melhorou
-                FROM snapshots_inicio i
-                JOIN snapshots_fim f ON i.id_utente = f.id_utente
-                WHERE i.grau_inicio IS NOT NULL AND f.grau_fim IS NOT NULL
-                AND EXISTS (
-                    SELECT 1 FROM contacto c
-                    WHERE c.id_utente = i.id_utente
-                        AND c.data_contacto BETWEEN %s AND %s
-                )
-            )
-            SELECT nome_utente, grau_inicio, grau_fim, isolamento_inicio, isolamento_fim, melhorou
-            FROM comparacao
-            WHERE melhorou = 1
-            ORDER BY nome_utente
-        """, [data_fim, data_fim, data_inicio, data_inicio, data_fim, data_fim, data_inicio, data_fim])
-        melhorias = _esc_rows(cursor.fetchall())
-
-        # ----- Agravamento do grau de dependência (qualquer piora dentro do período) -----
-        cursor.execute("""
-            WITH snapshots_periodo AS (
-                SELECT 
+            WITH estados AS (
+                SELECT
                     hi.id_utente,
                     hi.data_historico,
                     hi.snapshot_json->'principal'->>'nome' AS nome,
-                    EXTRACT(YEAR FROM AGE(%s, u.data_nascimento))::int AS idade,
                     hi.snapshot_json->'principal'->>'grau_autonomia' AS grau,
-                    hi.snapshot_json->'principal'->>'zona' AS zona,
-                    CASE 
-                        WHEN hi.snapshot_json->'principal'->>'grau_autonomia' = 'Autónomo' THEN 1
-                        WHEN hi.snapshot_json->'principal'->>'grau_autonomia' = 'Parcialmente dependente' THEN 2
-                        WHEN hi.snapshot_json->'principal'->>'grau_autonomia' = 'Dependente' THEN 3
-                        ELSE 0
-                    END AS nivel
+                    hi.snapshot_json->'principal'->>'nivel_isolamento' AS isolamento,
+                    CASE hi.snapshot_json->'principal'->>'grau_autonomia'
+                        WHEN 'Autónomo' THEN 1
+                        WHEN 'Parcialmente dependente' THEN 2
+                        WHEN 'Dependente' THEN 3
+                    END AS n_grau,
+                    CASE hi.snapshot_json->'principal'->>'nivel_isolamento'
+                        WHEN 'Nenhum' THEN 1
+                        WHEN 'Moderado' THEN 2
+                        WHEN 'Elevado' THEN 3
+                    END AS n_isolamento
                 FROM historico_idoso hi
-                JOIN UTENTES u ON u.id_utente = hi.id_utente
-                WHERE hi.data_historico < %s AND u.data_criacao < %s
-                ORDER BY hi.id_utente, hi.data_historico DESC
+                WHERE hi.data_historico BETWEEN %s AND %s   -- só dados do período
             ),
-            agravamentos AS (
-                SELECT DISTINCT c.id_utente, c.nome, c.idade, c.zona,
-                    c.grau_anterior,
-                    c.grau AS grau_atual
-                FROM (
-                    SELECT s.*,
-                        LAG(s.grau)  OVER (PARTITION BY s.id_utente ORDER BY s.data_historico) AS grau_anterior,
-                        LAG(s.nivel) OVER (PARTITION BY s.id_utente ORDER BY s.data_historico) AS nivel_anterior
-                    FROM snapshots_periodo s
-                ) c
-                WHERE c.data_historico >= %s AND c.nivel_anterior > 0 AND c.nivel_anterior < c.nivel
+            atual AS (
+                SELECT DISTINCT ON (id_utente) *
+                FROM estados
+                ORDER BY id_utente, data_historico DESC
+            ),
+            anterior AS (
+                SELECT DISTINCT ON (e.id_utente) e.*
+                FROM estados e
+                JOIN atual a ON a.id_utente = e.id_utente
+                WHERE e.data_historico < a.data_historico
+                ORDER BY e.id_utente, e.data_historico DESC
+            ),
+            comparacao AS (
+                SELECT
+                    a.nome AS nome_utente,
+                    p.grau AS grau_anterior,
+                    a.grau AS grau_atual,
+                    p.isolamento AS isolamento_anterior,
+                    a.isolamento AS isolamento_atual,
+                    CASE
+                        WHEN a.n_grau <= p.n_grau
+                         AND a.n_isolamento <= p.n_isolamento
+                         AND (a.n_grau < p.n_grau OR a.n_isolamento < p.n_isolamento)
+                        THEN 1 ELSE 0
+                    END AS melhorou
+                FROM atual a
+                JOIN anterior p ON p.id_utente = a.id_utente
+                WHERE EXISTS (
+                    SELECT 1 FROM contacto c
+                    WHERE c.id_utente = a.id_utente
+                      AND c.data_contacto BETWEEN %s AND %s
+                )
             )
-            SELECT nome, idade, zona, grau_anterior, grau_atual
-            FROM agravamentos
-            ORDER BY nome
-        """, [data_fim, data_fim, data_fim, data_inicio])
+            SELECT nome_utente, grau_anterior, grau_atual, isolamento_anterior, isolamento_atual, melhorou
+            FROM comparacao
+            WHERE melhorou = 1
+            ORDER BY nome_utente
+        """, [data_inicio, data_fim, data_inicio, data_fim])
+        melhorias = _esc_rows(cursor.fetchall())
+
+        # ----- Agravamento do grau de autonomia (estado atual vs imediatamente anterior, só dados do período) -----
+        cursor.execute("""
+            WITH estados AS (
+                SELECT
+                    hi.id_utente,
+                    hi.data_historico,
+                    hi.snapshot_json->'principal'->>'nome' AS nome,
+                    hi.snapshot_json->'principal'->>'zona' AS zona,
+                    hi.snapshot_json->'principal'->>'grau_autonomia' AS grau,
+                    CASE hi.snapshot_json->'principal'->>'grau_autonomia'
+                        WHEN 'Autónomo' THEN 1
+                        WHEN 'Parcialmente dependente' THEN 2
+                        WHEN 'Dependente' THEN 3
+                    END AS n_grau
+                FROM historico_idoso hi
+                WHERE hi.data_historico BETWEEN %s AND %s   -- só dados do período
+            ),
+            atual AS (
+                SELECT DISTINCT ON (id_utente) *
+                FROM estados
+                ORDER BY id_utente, data_historico DESC
+            ),
+            anterior AS (
+                SELECT DISTINCT ON (e.id_utente) e.*
+                FROM estados e
+                JOIN atual a ON a.id_utente = e.id_utente
+                WHERE e.data_historico < a.data_historico
+                ORDER BY e.id_utente, e.data_historico DESC
+            )
+            SELECT
+                a.nome,
+                EXTRACT(YEAR FROM AGE(%s, u.data_nascimento))::int AS idade,
+                a.zona,
+                p.grau AS grau_anterior,
+                a.grau AS grau_atual
+            FROM atual a
+            JOIN anterior p ON p.id_utente = a.id_utente
+            JOIN UTENTES u ON u.id_utente = a.id_utente
+            WHERE a.n_grau > p.n_grau
+            ORDER BY a.nome
+        """, [data_inicio, data_fim, data_fim])
         agravamentos = _esc_rows(cursor.fetchall())
     # =========================================================
     # --- Construção do PDF ---
