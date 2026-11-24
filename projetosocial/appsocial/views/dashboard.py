@@ -218,11 +218,14 @@ def dashboard(request):
         """)
         mais_contactos = cursor.fetchall()
 
-        # ----- 28. Melhorias após participação -----
+        # 28. Melhorias após participação
         melhorias, n_melhorias = _buscar_lista_limitada(
             cursor,
-            """SELECT nome_utente, grau_anterior, grau_atual, isolamento_anterior, isolamento_final, melhorou
-               FROM vw_melhorias WHERE melhorou = 1 ORDER BY nome_utente""",
+            """SELECT nome_utente, grau_anterior, grau_atual,
+                      isolamento_anterior, isolamento_atual, melhorou
+               FROM vw_melhorias
+               WHERE melhorou = 1
+               ORDER BY nome_utente""",
             "SELECT COUNT(*) FROM vw_melhorias WHERE melhorou = 1",
             50,
         )
