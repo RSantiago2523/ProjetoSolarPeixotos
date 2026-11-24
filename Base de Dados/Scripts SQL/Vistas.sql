@@ -363,42 +363,46 @@ ORDER BY m.mes;
 -- ============================================================
 -- 1. Agravamento do grau de dependência
 -- ============================================================
-CREATE OR REPLACE VIEW vw_agravamento_dependencia AS
-WITH ultimo_historico AS (
-    SELECT DISTINCT ON (hi.id_utente)
+CREATE VIEW vw_agravamento_dependencia AS
+WITH estados AS (
+    -- um registo por snapshot, com o grau de autonomia em número (1 = melhor, 3 = pior)
+    SELECT
         hi.id_utente,
-        hi.snapshot_json->'principal'->>'grau_autonomia' AS grau_anterior
+        hi.data_historico,
+        hi.snapshot_json->'principal'->>'nome' AS nome,
+        hi.snapshot_json->'principal'->>'zona' AS zona,
+        hi.snapshot_json->'principal'->>'grau_autonomia' AS grau,
+        CASE hi.snapshot_json->'principal'->>'grau_autonomia'
+            WHEN 'Autónomo' THEN 1
+            WHEN 'Parcialmente dependente' THEN 2
+            WHEN 'Dependente' THEN 3
+        END AS n_grau
     FROM historico_idoso hi
-    JOIN UTENTES_IDOSOS uig ON uig.ID_UTENTE = hi.id_utente
-    JOIN GRAU_AUTONOMIA gag ON gag.ID_GRAU_AUTONOMIA = uig.ID_GRAU_AUTONOMIA
-    WHERE hi.snapshot_json->'principal'->>'grau_autonomia' <> gag.NOME_GRAU_AUTONOMIA   -- último estado com grau diferente do atual
-    ORDER BY hi.id_utente, hi.data_historico DESC
 ),
-atuais AS (
-    SELECT 
-        u.ID_UTENTE,
-        u.NOME_UTENTE,
-        ga.NOME_GRAU_AUTONOMIA AS grau_atual,
-        EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.DATA_NASCIMENTO)) AS idade,
-        z.DESCRICAO_ZONA_UTENTE AS zona
-    FROM UTENTES u
-    JOIN UTENTES_IDOSOS ui ON u.ID_UTENTE = ui.ID_UTENTE
-    JOIN GRAU_AUTONOMIA ga ON ui.ID_GRAU_AUTONOMIA = ga.ID_GRAU_AUTONOMIA
-    JOIN ZONA_UTENTE z ON u.ID_ZONA_UTENTE = z.ID_ZONA_UTENTE
+atual AS (
+    -- estado atual = snapshot mais recente de cada utente
+    SELECT DISTINCT ON (id_utente) *
+    FROM estados
+    ORDER BY id_utente, data_historico DESC
+),
+anterior AS (
+    -- estado anterior = snapshot imediatamente antes do atual
+    SELECT DISTINCT ON (e.id_utente) e.*
+    FROM estados e
+    JOIN atual a ON a.id_utente = e.id_utente
+    WHERE e.data_historico < a.data_historico
+    ORDER BY e.id_utente, e.data_historico DESC
 )
-SELECT 
-    a.NOME_UTENTE,
-    a.idade,
+SELECT
+    a.nome AS nome_utente,
+    EXTRACT(YEAR FROM AGE(CURRENT_DATE, u.data_nascimento))::int AS idade,
     a.zona,
-    a.grau_atual,
-    h.grau_anterior
-FROM atuais a
-LEFT JOIN ultimo_historico h ON a.ID_UTENTE = h.id_utente
-WHERE h.grau_anterior IS NOT NULL
-  AND (
-        (a.grau_atual = 'Dependente' AND h.grau_anterior IN ('Autónomo', 'Parcialmente dependente'))
-        OR (a.grau_atual = 'Parcialmente dependente' AND h.grau_anterior = 'Autónomo')
-  );
+    p.grau AS grau_anterior,
+    a.grau AS grau_atual
+FROM atual a
+JOIN anterior p ON p.id_utente = a.id_utente
+JOIN UTENTES u ON u.id_utente = a.id_utente
+WHERE a.n_grau > p.n_grau;
 
 -- ============================================================
 -- 2. Total de idosos que vivem sozinhos
@@ -438,47 +442,53 @@ LIMIT 10;
 -- 5. Melhoria após participação (baseado em histórico)
 -- ============================================================
 CREATE OR REPLACE VIEW vw_melhorias AS
-WITH primeiro_snapshot AS (
-    SELECT DISTINCT ON (id_utente)
-        id_utente,
-        snapshot_json->'principal'->>'grau_autonomia' AS grau_inicial,
-        snapshot_json->'principal'->>'nivel_isolamento' AS isolamento_inicial
-    FROM historico_idoso
-    ORDER BY id_utente, data_historico ASC
+WITH estados AS (
+    -- um registo por snapshot, com autonomia e isolamento em número (1 = melhor, 3 = pior)
+    SELECT
+        hi.id_utente,
+        hi.data_historico,
+        hi.snapshot_json->'principal'->>'nome' AS nome,
+        hi.snapshot_json->'principal'->>'grau_autonomia' AS grau,
+        hi.snapshot_json->'principal'->>'nivel_isolamento' AS isolamento,
+        CASE hi.snapshot_json->'principal'->>'grau_autonomia'
+            WHEN 'Autónomo' THEN 1
+            WHEN 'Parcialmente dependente' THEN 2
+            WHEN 'Dependente' THEN 3
+        END AS n_grau,
+        CASE hi.snapshot_json->'principal'->>'nivel_isolamento'
+            WHEN 'Nenhum' THEN 1
+            WHEN 'Moderado' THEN 2
+            WHEN 'Elevado' THEN 3
+        END AS n_isolamento
+    FROM historico_idoso hi
 ),
-ultimo_snapshot AS (
-    SELECT DISTINCT ON (id_utente)
-        id_utente,
-        snapshot_json->'principal'->>'grau_autonomia' AS grau_final,
-        snapshot_json->'principal'->>'nivel_isolamento' AS isolamento_final
-    FROM historico_idoso
+atual AS (
+    SELECT DISTINCT ON (id_utente) *
+    FROM estados
     ORDER BY id_utente, data_historico DESC
+),
+anterior AS (
+    SELECT DISTINCT ON (e.id_utente) e.*
+    FROM estados e
+    JOIN atual a ON a.id_utente = e.id_utente
+    WHERE e.data_historico < a.data_historico
+    ORDER BY e.id_utente, e.data_historico DESC
 )
-SELECT 
-    u.NOME_UTENTE,
-    p.grau_inicial,
-    uf.grau_final,
-    p.isolamento_inicial,
-    uf.isolamento_final,
-    CASE 
-        -- Piorou na autonomia ou no isolamento: não conta como melhoria
-        WHEN (p.grau_inicial = 'Autónomo' AND uf.grau_final IN ('Parcialmente dependente', 'Dependente'))
-          OR (p.grau_inicial = 'Parcialmente dependente' AND uf.grau_final = 'Dependente')
-          OR (p.isolamento_inicial = 'Nenhum' AND uf.isolamento_final IN ('Moderado', 'Elevado'))
-          OR (p.isolamento_inicial = 'Moderado' AND uf.isolamento_final = 'Elevado')
-        THEN 0
-        -- Melhoria na autonomia
-        WHEN (p.grau_inicial = 'Dependente' AND uf.grau_final IN ('Parcialmente dependente', 'Autónomo'))
-          OR (p.grau_inicial = 'Parcialmente dependente' AND uf.grau_final = 'Autónomo')
-          -- Melhoria no isolamento
-          OR (p.isolamento_inicial = 'Elevado' AND uf.isolamento_final IN ('Moderado', 'Nenhum'))
-          OR (p.isolamento_inicial = 'Moderado' AND uf.isolamento_final = 'Nenhum')
+SELECT
+    a.nome AS nome_utente,
+    p.grau AS grau_anterior,
+    a.grau AS grau_atual,
+    p.isolamento AS isolamento_anterior,
+    a.isolamento AS isolamento_atual,
+    CASE
+        WHEN a.n_grau <= p.n_grau                                      -- autonomia não piorou
+         AND a.n_isolamento <= p.n_isolamento                          -- isolamento não piorou
+         AND (a.n_grau < p.n_grau OR a.n_isolamento < p.n_isolamento)  -- e um dos dois melhorou
         THEN 1 ELSE 0
     END AS melhorou
-FROM primeiro_snapshot p
-JOIN ultimo_snapshot uf ON p.id_utente = uf.id_utente
-JOIN UTENTES u ON p.id_utente = u.ID_UTENTE
-WHERE p.id_utente IN (SELECT DISTINCT ID_UTENTE FROM CONTACTO);   -- ← alterado de PARTICIPAR para CONTACTO
+FROM atual a
+JOIN anterior p ON p.id_utente = a.id_utente
+WHERE a.id_utente IN (SELECT DISTINCT id_utente FROM CONTACTO);
 
 /*Índices Opcionais*/
 CREATE INDEX IF NOT EXISTS idx_hist_idoso_utente_data ON historico_idoso (id_utente, data_historico);
