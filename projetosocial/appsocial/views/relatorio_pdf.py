@@ -639,7 +639,7 @@ def relatorio_pdf(request, ano, mes=None):
         """, [data_fim, data_inicio, data_fim])
         idosos_sem_contacto = _esc_rows(cursor.fetchall())
 
-        # ----- Melhorias após participação (estado atual vs imediatamente anterior, só dados do período) -----
+        # ----- Melhorias após participação (estado atual vs anterior, só dados do período) -----
         cursor.execute("""
             WITH estados AS (
                 SELECT
@@ -671,6 +671,8 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM estados e
                 JOIN atual a ON a.id_utente = e.id_utente
                 WHERE e.data_historico < a.data_historico
+                  AND (e.grau IS DISTINCT FROM a.grau
+                       OR e.isolamento IS DISTINCT FROM a.isolamento)
                 ORDER BY e.id_utente, e.data_historico DESC
             ),
             comparacao AS (
@@ -701,7 +703,7 @@ def relatorio_pdf(request, ano, mes=None):
         """, [data_inicio, data_fim, data_inicio, data_fim])
         melhorias = _esc_rows(cursor.fetchall())
 
-        # ----- Agravamento do grau de autonomia (estado atual vs imediatamente anterior, só dados do período) -----
+        # ----- Agravamento do grau de autonomia (estado atual vs anterior, só dados do período) -----
         cursor.execute("""
             WITH estados AS (
                 SELECT
@@ -728,6 +730,9 @@ def relatorio_pdf(request, ano, mes=None):
                 FROM estados e
                 JOIN atual a ON a.id_utente = e.id_utente
                 WHERE e.data_historico < a.data_historico
+                  AND e.n_grau IS NOT NULL
+                  AND a.n_grau IS NOT NULL
+                  AND e.n_grau <> a.n_grau
                 ORDER BY e.id_utente, e.data_historico DESC
             )
             SELECT
@@ -1062,8 +1067,8 @@ def relatorio_pdf(request, ano, mes=None):
     story.append(Paragraph("Melhorias apos participacao", subtitulo_estilo))
     if melhorias:
         table_data = [[
-            Paragraph("Nome", celula_estilo), Paragraph("Grau inicial", celula_estilo),
-            Paragraph("Grau atual", celula_estilo), Paragraph("Isolamento inicial", celula_estilo),
+            Paragraph("Nome", celula_estilo), Paragraph("Grau anterior", celula_estilo),
+            Paragraph("Grau atual", celula_estilo), Paragraph("Isolamento anterior", celula_estilo),
             Paragraph("Isolamento atual", celula_estilo), Paragraph("Melhorou?", celula_estilo),
         ]]
         for m in melhorias:
